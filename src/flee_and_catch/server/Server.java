@@ -104,18 +104,25 @@ public class Server {
 			DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 			outputStreams.add(outputStream);
 			while(true) {
+				int result;
 				value = new char[4];
-				reader.read(value);
-				int length = 0;
-				for(int i = 0; i < value.length; i++) {
-					length += (int) (value[i] * Math.pow(2, (value.length - (i + 1))));
+				result = reader.read(value);
+				if(result >= 0) {
+					int length = 0;
+					for(int i = 0; i < value.length; i++) {
+						length += (int) (value[i] * Math.pow(2, (value.length - (i + 1))));
+					}
+					
+					value = new char[length];
+					result = reader.read(value);
+					
+					data = new String(value);
+					System.out.println(value);
 				}
-				
-				value = new char[length];
-				int result = reader.read(value);
-				
-				data = new String(value);
-				System.out.println(value);
+				else {
+					System.out.println("Client disconnected " + pSocket.getInetAddress());
+					//close all
+				}
 			}
 		}
 		catch(IOException ex) {
