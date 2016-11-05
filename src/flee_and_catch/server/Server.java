@@ -4,9 +4,11 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 
-import com.sun.org.apache.bcel.internal.util.Objects;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-import net.sf.json.JSONObject;
+import com.sun.org.apache.bcel.internal.util.Objects;
 
 public class Server {
 
@@ -112,6 +114,9 @@ public class Server {
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 			});
@@ -132,8 +137,9 @@ public class Server {
 	 * @throws InterruptedException 
 	 * 
 	 * @author ThunderSL94
+	 * @throws ParseException 
 	 */
-	private void addClient(int pId) throws IOException, InterruptedException {
+	private void addClient(int pId) throws IOException, InterruptedException, ParseException {
 		String dataString = null;
 		char[] value = null;
 		
@@ -153,42 +159,39 @@ public class Server {
 			int result;
 			value = new char[4];
 			result = clients.get(pId).getReader().read(value);
+			
+			char[] tmp = new char[value.length];
+			for(int i=0; i<tmp.length; i++) {
+				tmp[i] = value[value.length - (i + 1)];
+			}
+			value = tmp;
+			
 			if(result >= 0) {
 				int length = 0;
 				for(int i = 0; i < value.length; i++) {
 					length += (int) (value[i] * Math.pow(2, (value.length - (i + 1))));
 				}
 				
-				value = new char[length];				
-				result = clients.get(pId).getReader().read(value);
+				value = new char[length];
+				for( int i=0; i<value.length; i++) {
+					tmp = new char[1];
+					clients.get(pId).getReader().read(tmp, 0, 1);
+					value[i] = tmp[0];
+				}
 				
 				dataString = new String(value);
 				System.out.println(value);
 				
-				
-				
-				/*test++;
-				if(test > 2) {
-					JSONObject jsonObject = JSONObject.fromObject(dataString);
-					if(Objects.equals(jsonObject.getString("id"), "Connect")) {
-						if(Objects.equals(jsonObject.getString("type"), "SetType")) {
-							jsonObject = jsonObject.getJSONObject("client");
-							clients.get(pId).setType(jsonObject.getInt("type"));
-						}
-					}
-				}*/
-				/*try {
-					JSONObject jsonObject = JSONObject.fromObject(dataString);
-					if(Objects.equals(jsonObject.getString("id"), "Connect")) {
-						if(Objects.equals(jsonObject.getString("type"), "SetType")) {
-							jsonObject = jsonObject.getJSONObject("client");
-							clients.get(pId).setType(jsonObject.getInt("type"));
-						}
+				JSONParser parser = new JSONParser();
+				JSONObject jsonObject = new JSONObject();
+				jsonObject = (JSONObject) parser.parse(dataString);
+				if(Objects.equals((String) jsonObject.get("id"), "Connection")) {
+					if(Objects.equals((String) jsonObject.get("type"), "SetType")) {
+						jsonObject = (JSONObject) jsonObject.get("client");
+						long type = (long) jsonObject.get("type");
+						clients.get(pId).setType((int) type);
 					}
 				}
-				catch(Exception ex) {
-					
-				}*/
 			}
 			else {
 				removeClient(clients.get(pId));
@@ -260,7 +263,7 @@ public class Server {
 	
 	/**
 	 * <h1>New id</h1>
-	 * Calculate new id in reference of the exist clients.
+	 * Calculate new id in reference of the exist clients.=hs
 	 * 
 	 * @return New id
 	 * 
