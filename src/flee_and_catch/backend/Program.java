@@ -1,6 +1,7 @@
+package flee_and_catch.backend;
 import java.io.IOException;
 
-import flee_and_catch.server.Server;
+import flee_and_catch.backend.communication.Server;
 
 public class Program {
 

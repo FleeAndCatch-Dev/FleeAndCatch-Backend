@@ -1,4 +1,4 @@
-package flee_and_catch.server;
+package flee_and_catch.backend.communication;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
