@@ -114,9 +114,6 @@ public class Server {
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					} catch (ParseException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					}
 				}
 			});
@@ -139,7 +136,7 @@ public class Server {
 	 * @author ThunderSL94
 	 * @throws ParseException 
 	 */
-	private void addClient(int pId) throws IOException, InterruptedException, ParseException {
+	private void addClient(int pId) throws IOException, InterruptedException{
 		String dataString = null;
 		char[] value = null;
 		
@@ -150,48 +147,32 @@ public class Server {
 		DataOutputStream outputStream = new DataOutputStream(clients.get(pId).getSocket().getOutputStream());
 		clients.get(pId).setOutputStream(outputStream);
 		
+		clients.get(pId).setInterpreter(new Interpreter(clients.get(pId)));
+		
 		String jsonString = "{\"id\":\"Connection\",\"type\":\"SetId\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
 		sendCommand(clients.get(pId), jsonString);
 		jsonString = "{\"id\":\"Connection\",\"type\":\"GetType\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
 		sendCommand(clients.get(pId), jsonString);
 
-		while(clients.get(pId).isOpened()) {			
-			int result;
+		while(clients.get(pId).isOpened()) {
 			value = new char[4];
-			result = clients.get(pId).getReader().read(value);
-			
-			char[] tmp = new char[value.length];
-			for(int i=0; i<tmp.length; i++) {
-				tmp[i] = value[value.length - (i + 1)];
-			}
-			value = tmp;
+			int result = clients.get(pId).getReader().read(value);
 			
 			if(result >= 0) {
 				int length = 0;
 				for(int i = 0; i < value.length; i++) {
-					length += (int) (value[i] * Math.pow(2, (value.length - (i + 1))));
+					length += (int) (value[i] * Math.pow(256, i));
 				}
 				
 				value = new char[length];
 				for( int i=0; i<value.length; i++) {
-					tmp = new char[1];
+					char[] tmp = new char[1];
 					clients.get(pId).getReader().read(tmp, 0, 1);
 					value[i] = tmp[0];
 				}
 				
-				dataString = new String(value);
-				System.out.println(value);
-				
-				JSONParser parser = new JSONParser();
-				JSONObject jsonObject = new JSONObject();
-				jsonObject = (JSONObject) parser.parse(dataString);
-				if(Objects.equals((String) jsonObject.get("id"), "Connection")) {
-					if(Objects.equals((String) jsonObject.get("type"), "SetType")) {
-						jsonObject = (JSONObject) jsonObject.get("client");
-						long type = (long) jsonObject.get("type");
-						clients.get(pId).setType((int) type);
-					}
-				}
+				String command = new String(value);
+				clients.get(pId).getCommandList().add(command);
 			}
 			else {
 				removeClient(clients.get(pId));
@@ -211,11 +192,18 @@ public class Server {
 	 * @author ThunderSL94
 	 */
 	public void sendCommand(Client pClient, String pCommand) throws IOException {
-		pClient.getOutputStream().writeInt(pCommand.length());
+		byte[] size = new byte[4];
+		int rest = pCommand.length();
+		for(int i=0; i<size.length; i++){
+			size[size.length - (i + 1)] = (byte) (rest / Math.pow(256, size.length - (i + 1)));
+			rest = (int) (rest % Math.pow(256, size.length - (i + 1)));
+		}
+		
+		pClient.getOutputStream().write(size);
 		pClient.getOutputStream().flush();
-
+		
 		pClient.getOutputStream().writeBytes(pCommand);
-		pClient.getOutputStream().flush();
+		pClient.getOutputStream().flush();	
 	}
 	
 	/**

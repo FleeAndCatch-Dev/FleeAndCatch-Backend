@@ -3,16 +3,19 @@ package flee_and_catch.backend.communication;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Client {
 
 	private int id;
-	private int type;
+	private String type;
 	private boolean opened;
 	private Socket socket;
 	private Thread thread;
 	private BufferedReader reader;
 	private DataOutputStream outputStream;
+	private Interpreter interpreter;
+	private ArrayList<String> commandList;
 	
 	/**
 	 * <h1>Constructor</h1>
@@ -31,6 +34,7 @@ public class Client {
 		this.opened = pOpened;
 		this.socket = pSocket;
 		this.thread = pThread;
+		this.commandList = new ArrayList<String>();
 	}
 	
 	public int getId() {
@@ -40,10 +44,10 @@ public class Client {
 		this.id = id;
 	}
 	
-	public int getType() {
+	public String getType() {
 		return type;
 	}
-	public void setType(int type) {
+	public void setType(String type) {
 		this.type = type;
 	}
 	
@@ -80,5 +84,20 @@ public class Client {
 	}
 	public void setOutputStream(DataOutputStream outputStream) {
 		this.outputStream = outputStream;
+	}
+
+	public ArrayList<String> getCommandList() {
+		return commandList;
+	}
+	public void setCommandList(ArrayList<String> commandList) {
+		this.commandList = commandList;
+	}
+
+	public Interpreter getInterpreter() {
+		return interpreter;
+	}
+	public void setInterpreter(Interpreter interpreter) {
+		this.interpreter = interpreter;
 	}	
+	
 }
