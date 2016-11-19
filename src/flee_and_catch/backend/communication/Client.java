@@ -1,21 +1,18 @@
 package flee_and_catch.backend.communication;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class Client {
 
 	private int id;
-	private String type;
-	private boolean opened;
+	private ClientType type;
+	private boolean connected;
 	private Socket socket;
-	private Thread thread;
-	private BufferedReader reader;
-	private DataOutputStream outputStream;
+	private BufferedReader bufferedReader;
+	private OutputStream outputStream;
 	private Interpreter interpreter;
-	private ArrayList<String> commandList;
 	
 	/**
 	 * <h1>Constructor</h1>
@@ -29,75 +26,44 @@ public class Client {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Client(int pId, boolean pOpened, Socket pSocket, Thread pThread) {
+	public Client(int pId, ClientType pType, boolean pConnected, Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream, Interpreter pInterpreter) {
 		this.id = pId;
-		this.opened = pOpened;
+		this.type = pType;
+		this.connected = pConnected;
 		this.socket = pSocket;
-		this.thread = pThread;
-		this.commandList = new ArrayList<String>();
+		this.bufferedReader = pBufferedReader;
+		this.outputStream = pOutputStream;
+		this.interpreter = pInterpreter;
 	}
-	
+
 	public int getId() {
 		return id;
 	}
-	public void setId(int id) {
-		this.id = id;
-	}
-	
-	public String getType() {
+
+	public ClientType getType() {
 		return type;
 	}
-	public void setType(String type) {
-		this.type = type;
+
+	public boolean isConnected() {
+		return connected;
 	}
-	
-	public boolean isOpened() {
-		return opened;
-	}
-	public void setOpened(boolean opened) {
-		this.opened= opened;
+	public void setConnected(boolean connected) {
+		this.connected = connected;
 	}
 	
 	public Socket getSocket() {
 		return socket;
 	}
-	public void setSocket(Socket socket) {
-		this.socket = socket;
-	}
-	
-	public Thread getThread() {
-		return thread;
-	}
-	public void setThread(Thread thread) {
-		this.thread = thread;
-	}
-	
-	public BufferedReader getReader() {
-		return reader;
-	}
-	public void setReader(BufferedReader reader) {
-		this.reader = reader;
-	}
-	
-	public DataOutputStream getOutputStream() {
-		return outputStream;
-	}
-	public void setOutputStream(DataOutputStream outputStream) {
-		this.outputStream = outputStream;
+
+	public BufferedReader getBufferedReader() {
+		return bufferedReader;
 	}
 
-	public ArrayList<String> getCommandList() {
-		return commandList;
-	}
-	public void setCommandList(ArrayList<String> commandList) {
-		this.commandList = commandList;
+	public OutputStream getOutputStream() {
+		return outputStream;
 	}
 
 	public Interpreter getInterpreter() {
 		return interpreter;
 	}
-	public void setInterpreter(Interpreter interpreter) {
-		this.interpreter = interpreter;
-	}	
-	
 }

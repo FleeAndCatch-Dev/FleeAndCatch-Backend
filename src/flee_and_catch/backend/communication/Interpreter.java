@@ -6,87 +6,36 @@ import org.json.simple.parser.ParseException;
 
 import com.sun.org.apache.bcel.internal.util.Objects;
 
+import flee_and_catch.backend.exception.ParseCommand;
+
 public class Interpreter {
 
-	private Client theClient;
-	private boolean opened;
-
-	public Interpreter(Client pClient){
-		theClient = pClient;
-		opened = true;
-		Thread interpretThread = new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				try {
-					interpret();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		});
-		interpretThread.start();
+	private JSONParser parser;
+	
+	public Interpreter(){
+		this.parser = new JSONParser();
 	}
 	
-	private void interpret() throws InterruptedException, ParseException{
-		JSONParser parser = new JSONParser();
-		
-		while(opened){
-			if(theClient.getCommandList().size() > 0){
-				JSONObject jsonObject = new JSONObject();
-				jsonObject = (JSONObject) parser.parse(theClient.getCommandList().get(0));
-				if(Objects.equals((String) jsonObject.get("apiid"), "@@fleeandcatch@@")){
-					if(Objects.equals((String) jsonObject.get("id"), "Connection")){
-						connection(theClient.getCommandList().get(0));
-					}
-					else if (Objects.equals((String) jsonObject.get("id"), "Test")) {
-						
-					}
-				}
-				else {
-					
-				}
-				theClient.getCommandList().remove(theClient.getCommandList().get(0));
-			}
-			Thread.sleep(10);
-			//dataString = new String(value);
-			//System.out.println(value);
-			
-			/*JSONParser parser = new JSONParser();
-			JSONObject jsonObject = new JSONObject();
-			jsonObject = (JSONObject) parser.parse(dataString);
-			if(Objects.equals((String) jsonObject.get("id"), "Connection")) {
-				if(Objects.equals((String) jsonObject.get("type"), "SetType")) {
-					jsonObject = (JSONObject) jsonObject.get("client");
-					String type = String.valueOf(jsonObject.get("type"));
-					clients.get(pId).setType(type);
-				}
-			}*/
-		}
-	}
-	
-	public void close(){
-		opened = false;
-	}
-	
-	private void connection(String pCommand) throws ParseException{
-		JSONParser parser = new JSONParser();
+	public String interpret(String receiveCmd) throws ParseException, ParseCommand {
 		JSONObject jsonObject = new JSONObject();
-		jsonObject = (JSONObject) parser.parse(pCommand);
-		
-		if(Objects.equals((String) jsonObject.get("type"), "SetType")){
-			jsonObject = (JSONObject) jsonObject.get("client");
-			String type = String.valueOf(jsonObject.get("type"));
-			theClient.setType(type);
-		}
-	}
-	
-	public boolean isOpened() {
-		return opened;
+		jsonObject = (JSONObject) parser.parse(receiveCmd);
+		if(Objects.equals((String) jsonObject.get("apiid"), "@@fleeandcatch@@")){
+			char[] typeArray = ((String) jsonObject.get("type")).toCharArray();
+			String typeCmd = String.valueOf(typeArray, 0, 3);
+			if(Objects.equals("Get", typeCmd)){
+				return null;
+			}
+			else if(Objects.equals("Set", typeCmd)){
+				String id = Character.toLowerCase(((String) jsonObject.get("id")).toCharArray()[0]) + ((String) jsonObject.get("id")).substring(1);
+				if(Objects.equals("client", id)){
+					jsonObject = (JSONObject) jsonObject.get(id);					
+					String type = Character.toLowerCase(String.valueOf(typeArray, 3, typeArray.length - 3).toCharArray()[0]) + String.valueOf(typeArray, 3, typeArray.length - 3).substring(1);
+					if(Objects.equals("type", type)){
+						return (String) jsonObject.get(type);
+					}
+				}	
+			}
+		}		
+		throw new ParseCommand();
 	}
 }
