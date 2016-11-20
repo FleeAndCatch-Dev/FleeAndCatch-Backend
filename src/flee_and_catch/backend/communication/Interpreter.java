@@ -16,9 +16,9 @@ public class Interpreter {
 		this.parser = new JSONParser();
 	}
 	
-	public String interpret(String receiveCmd) throws ParseException, ParseCommand {
+	public String interpret(String pCommand) throws ParseException, ParseCommand {
 		JSONObject jsonObject = new JSONObject();
-		jsonObject = (JSONObject) parser.parse(receiveCmd);
+		jsonObject = (JSONObject) parser.parse(pCommand);
 		if(Objects.equals((String) jsonObject.get("apiid"), "@@fleeandcatch@@")){
 			char[] typeArray = ((String) jsonObject.get("type")).toCharArray();
 			String typeCmd = String.valueOf(typeArray, 0, 3);

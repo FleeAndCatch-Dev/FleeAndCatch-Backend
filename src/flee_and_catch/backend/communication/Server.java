@@ -106,8 +106,8 @@ public class Server {
 		byte[] size = new byte[4];
 		int rest = pCommand.length();
 		for(int i=0; i<size.length; i++){
-			size[size.length - (i + 1)] = (byte) (rest / Math.pow(256, size.length - (i + 1)));
-			rest = (int) (rest % Math.pow(256, size.length - (i + 1)));
+			size[size.length - (i + 1)] = (byte) (rest / Math.pow(128, size.length - (i + 1)));
+			rest = (int) (rest % Math.pow(128, size.length - (i + 1)));
 		}
 		
 		pOutputStream.write(size);
@@ -124,7 +124,7 @@ public class Server {
 		if(result >= 0) {
 			int length = 0;
 			for(int i = 0; i < value.length; i++) {
-				length += (int) (value[i] * Math.pow(256, i));
+				length += (int) (value[i] * Math.pow(128, i));
 			}
 			
 			value = new char[length];
