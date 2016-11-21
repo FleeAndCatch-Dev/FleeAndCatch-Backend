@@ -39,7 +39,7 @@ public class Client {
 	public int getId() {
 		return id;
 	}
-
+	
 	public ClientType getType() {
 		return type;
 	}

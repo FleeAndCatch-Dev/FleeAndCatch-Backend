@@ -21,18 +21,35 @@ public class Server {
 	private boolean opened;
 	private ArrayList<Client> clients;
 	
+	/**
+	 * <h1>Constructor</h1>
+	 * Creates an object of the class server.
+	 * 
+	 * @throws IOException
+	 * 
+	 * @author ThunderSL94
+	 */
 	public Server() throws IOException {
 		this.serverSocket = new ServerSocket(Default.port);
 		this.clients = new ArrayList<Client>();
 		this.opened = false;
 	}
 	
+	/**
+	 * 
+	 * @param pPort
+	 * @throws IOException
+	 */
 	public Server(int pPort) throws IOException {
 		this.serverSocket = new ServerSocket(pPort);
 		this.clients = new ArrayList<Client>();
 		this.opened = false;
 	}
 	
+	/**
+	 * 
+	 * @throws OpenConnection
+	 */
 	public void open() throws OpenConnection{
 		if(!opened){
 			Thread listenerThread = new Thread(new Runnable() {
@@ -53,6 +70,10 @@ public class Server {
 		throw new OpenConnection();
 	}
 	
+	/**
+	 * 
+	 * @throws IOException
+	 */
 	private void listen() throws IOException{
 		opened = true;
 		while(opened){
@@ -80,6 +101,14 @@ public class Server {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param pSocket
+	 * @param pId
+	 * @throws IOException
+	 * @throws ParseException
+	 * @throws ParseCommand
+	 */
 	private void newClient(Socket pSocket, int pId) throws IOException, ParseException, ParseCommand{
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
@@ -89,10 +118,13 @@ public class Server {
 		jsonString = "{\"id\":\"Client\",\"type\":\"GetType\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
 		sendCmd(outputStream, jsonString);
 		
-		Interpreter interpreter = new Interpreter();
+		Interpreter interpreter = new Interpreter(this);
 		
 		ClientType result = ClientType.valueOf(interpreter.interpret(receiveCmd(bufferedReader, pId)));;		
 		Client client = new Client(pId, result, true, pSocket, bufferedReader, outputStream, interpreter);
+		clients.add(client);
+		
+		System.out.println("New client added with id:" + String.valueOf(pId) + " and type: " + result.toString());
 		
 		while(client.isConnected()){
 			String currentCmd = receiveCmd(bufferedReader, pId);
@@ -100,6 +132,13 @@ public class Server {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param pOutputStream
+	 * @param pCommand
+	 * @throws IOException
+	 * @throws ParseException
+	 */
 	public void sendCmd(OutputStream pOutputStream, String pCommand) throws IOException, ParseException{
 		checkCmd(pCommand);
 		
@@ -117,6 +156,37 @@ public class Server {
 		pOutputStream.flush();	
 	}
 	
+	/**
+	 * 
+	 * @param pOutputStream
+	 * @param pCommand
+	 * @throws IOException
+	 * @throws ParseException
+	 */
+	public void sendCmd(Client pClient, String pCommand) throws IOException, ParseException{
+		checkCmd(pCommand);
+		
+		byte[] size = new byte[4];
+		int rest = pCommand.length();
+		for(int i=0; i<size.length; i++){
+			size[size.length - (i + 1)] = (byte) (rest / Math.pow(128, size.length - (i + 1)));
+			rest = (int) (rest % Math.pow(128, size.length - (i + 1)));
+		}
+		
+		pClient.getOutputStream().write(size);
+		pClient.getOutputStream().flush();
+		
+		pClient.getOutputStream().write(pCommand.getBytes());
+		pClient.getOutputStream().flush();	
+	}
+	
+	/**
+	 * 
+	 * @param pBufferedReader
+	 * @param pId
+	 * @return
+	 * @throws IOException
+	 */
 	private String receiveCmd(BufferedReader pBufferedReader, int pId) throws IOException{
 		char[] value = new char[4];
 		int result = pBufferedReader.read(value);
@@ -142,16 +212,24 @@ public class Server {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param pClient
+	 * @throws IOException
+	 */
 	public void removeClient(Client pClient) throws IOException{
-		pClient.getBufferedReader().close();
 		pClient.getOutputStream().close();
 		pClient.setConnected(false);		
 		pClient.getSocket().close();
 		clients.remove(pClient);
 		
-		System.out.println("Client with id " + pClient.getId() + " disconnected");
+		System.out.println("Client with id " + pClient.getId() + " and type: " + pClient.getType().toString() + " disconnected");
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	private int generateNewClientId(){
 		int result = 0;
 		
@@ -163,11 +241,20 @@ public class Server {
 		return result;
 	}
 	
+	/**
+	 * 
+	 * @param pCommand
+	 * @throws ParseException
+	 */
 	private void checkCmd(String pCommand) throws ParseException{
 		JSONParser jsonParser = new JSONParser();
 		jsonParser.parse(pCommand);
 	}
 	
+	/**
+	 * 
+	 * @throws IOException
+	 */
 	public void close() throws IOException{
 		for(int i=0; i<clients.size(); i++)
 			removeClient(clients.get(i));
@@ -179,4 +266,9 @@ public class Server {
 	public boolean isOpened() {
 		return opened;
 	}
+
+	public ArrayList<Client> getClients() {
+		return clients;
+	}
+	
 }

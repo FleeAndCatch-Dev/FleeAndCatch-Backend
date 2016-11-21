@@ -11,7 +11,7 @@ public class Program {
 	 * Starts the program.
 	 * 
 	 * 
-	 * @param args
+	 * @param args Arguments for application
 	 * 
 	 * @author ThunderSL94
 	 */
