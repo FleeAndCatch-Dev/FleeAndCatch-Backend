@@ -218,6 +218,7 @@ public class Server {
 	 * @throws IOException
 	 */
 	public void removeClient(Client pClient) throws IOException{
+		pClient.getBufferedReader().close();
 		pClient.getOutputStream().close();
 		pClient.setConnected(false);		
 		pClient.getSocket().close();
