@@ -1,75 +1,61 @@
 package flee_and_catch.backend.communication;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 
-import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.sun.org.apache.bcel.internal.util.Objects;
+import flee_and_catch.backend.exception.OpenConnection;
+import flee_and_catch.backend.exception.ParseCommand;
 
 public class Server {
-
+	
 	private ServerSocket serverSocket;
 	private boolean opened;
-	private Thread listenerThread;
 	private ArrayList<Client> clients;
 	
 	/**
 	 * <h1>Constructor</h1>
-	 * <br>Create an object of the class server, with the default port.
-	 *  
-	 * @throws IOException
-	 * 
-	 * @author ThunderSL94
-	 */
-	public Server() throws IOException{
-		initComponents();
-		serverSocket = new ServerSocket(Default.port);
-	}
-	
-	/**
-	 * <h1>Constructor</h1>
-	 * <br>Create an object of the class server, with the given port.
-	 * 
-	 * @param pPort Number of the port.
+	 * Creates an object of the class server.
 	 * 
 	 * @throws IOException
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Server(int pPort) throws IOException{
-		initComponents();
-		serverSocket = new ServerSocket(pPort);
+	public Server() throws IOException {
+		this.serverSocket = new ServerSocket(Default.port);
+		this.clients = new ArrayList<Client>();
+		this.opened = false;
 	}
 	
 	/**
-	 * <h1>InitComponents</h1>
-	 * Initialize all components which used in this object.
 	 * 
-	 * @author ThunderSL94
+	 * @param pPort
+	 * @throws IOException
 	 */
-	private void initComponents() {
-		opened = false;
-		clients = new ArrayList<Client>();
+	public Server(int pPort) throws IOException {
+		this.serverSocket = new ServerSocket(pPort);
+		this.clients = new ArrayList<Client>();
+		this.opened = false;
 	}
 	
 	/**
-	 * <h1>Open socket</h1>
-	 * Open the socket at a defined port and runs in a new thread.
 	 * 
-	 * @author ThunderSL94
+	 * @throws OpenConnection
 	 */
-	public void open() {
-		if(!opened) {
-			opened = true;
-			listenerThread = new Thread(new Runnable() {
+	public void open() throws OpenConnection{
+		if(!opened){
+			Thread listenerThread = new Thread(new Runnable() {
 				
 				@Override
 				public void run() {
-					// TODO Auto-generated method stub
 					try {
 						listen();
 					} catch (IOException e) {
@@ -79,197 +65,173 @@ public class Server {
 				}
 			});
 			listenerThread.start();
+			return;
 		}
-		else {
-			//Handle Exception
-		}
+		throw new OpenConnection();
 	}
 	
 	/**
-	 * <h1>Listen socket</h1>
-	 * Server wait for clients and opens for every connection a new thread for an individual communication.
 	 * 
-	 *  @throws IOException
-	 *  
-	 *  @author ThunderSL94
+	 * @throws IOException
 	 */
-	private void listen() throws IOException {	
-		while(opened) {			
-			System.out.println("Wait for client ...");
-			
-			Socket socket = serverSocket.accept();
-			
-			final int id = getNewId();
-			
+	private void listen() throws IOException{
+		opened = true;
+		while(opened){
+			System.out.println("Wait for clients ...");
+			final Socket socket = serverSocket.accept();
 			Thread clientThread = new Thread(new Runnable() {
 				
 				@Override
 				public void run() {
-					// TODO Auto-generated method stub
 					try {
-						addClient(id);
+						newClient(socket, generateNewClientId());
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} catch (ParseException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
+					} catch (ParseCommand e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 			});
-			
-			Client client = new Client(id, true, socket, clientThread);
-			clients.add(client);
-			
 			clientThread.start();
 		}
 	}
 	
 	/**
-	 * <h1>Add new client</h1>
-	 * Add a new client an wait for a incomming communication.
 	 * 
-	 * @param pSocket Socket of the current client;
-	 * 
-	 * @throws InterruptedException 
-	 * 
-	 * @author ThunderSL94
-	 * @throws ParseException 
+	 * @param pSocket
+	 * @param pId
+	 * @throws IOException
+	 * @throws ParseException
+	 * @throws ParseCommand
 	 */
-	private void addClient(int pId) throws IOException, InterruptedException, ParseException {
-		String dataString = null;
-		char[] value = null;
+	private void newClient(Socket pSocket, int pId) throws IOException, ParseException, ParseCommand{
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
+		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		System.out.println("Add new client " + clients.get(pId).getSocket().getInetAddress());
+		String jsonString = "{\"id\":\"Client\",\"type\":\"SetId\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
+		sendCmd(outputStream, jsonString);
+		jsonString = "{\"id\":\"Client\",\"type\":\"GetType\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
+		sendCmd(outputStream, jsonString);
 		
-		BufferedReader reader = new BufferedReader(new InputStreamReader(clients.get(pId).getSocket().getInputStream()));
-		clients.get(pId).setReader(reader);
-		DataOutputStream outputStream = new DataOutputStream(clients.get(pId).getSocket().getOutputStream());
-		clients.get(pId).setOutputStream(outputStream);
+		Interpreter interpreter = new Interpreter(this);
 		
-		String jsonString = "{\"id\":\"Connection\",\"type\":\"SetId\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
-		sendCommand(clients.get(pId), jsonString);
-		jsonString = "{\"id\":\"Connection\",\"type\":\"GetType\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
-		sendCommand(clients.get(pId), jsonString);
-
-		while(clients.get(pId).isOpened()) {			
-			int result;
-			value = new char[4];
-			result = clients.get(pId).getReader().read(value);
-			
-			char[] tmp = new char[value.length];
-			for(int i=0; i<tmp.length; i++) {
-				tmp[i] = value[value.length - (i + 1)];
-			}
-			value = tmp;
-			
-			if(result >= 0) {
-				int length = 0;
-				for(int i = 0; i < value.length; i++) {
-					length += (int) (value[i] * Math.pow(2, (value.length - (i + 1))));
-				}
-				
-				value = new char[length];
-				for( int i=0; i<value.length; i++) {
-					tmp = new char[1];
-					clients.get(pId).getReader().read(tmp, 0, 1);
-					value[i] = tmp[0];
-				}
-				
-				dataString = new String(value);
-				System.out.println(value);
-				
-				JSONParser parser = new JSONParser();
-				JSONObject jsonObject = new JSONObject();
-				jsonObject = (JSONObject) parser.parse(dataString);
-				if(Objects.equals((String) jsonObject.get("id"), "Connection")) {
-					if(Objects.equals((String) jsonObject.get("type"), "SetType")) {
-						jsonObject = (JSONObject) jsonObject.get("client");
-						long type = (long) jsonObject.get("type");
-						clients.get(pId).setType((int) type);
-					}
-				}
-			}
-			else {
-				removeClient(clients.get(pId));
-			}
+		ClientType result = ClientType.valueOf(interpreter.interpret(receiveCmd(bufferedReader, pId)));;		
+		Client client = new Client(pId, result, true, pSocket, bufferedReader, outputStream, interpreter);
+		clients.add(client);
+		
+		System.out.println("New client added with id:" + String.valueOf(pId) + " and type: " + result.toString());
+		
+		while(client.isConnected()){
+			String currentCmd = receiveCmd(bufferedReader, pId);
+			interpreter.interpret(currentCmd);
 		}
 	}
 	
 	/**
-	 * <h1>Send command</h1>
-	 * Send a command with two sockets. The first socket sends the length as an integer of the data, the second contains the data.
 	 * 
-	 * @param pid The current id of the client.
-	 * @param pCommand The json command to send as string.
-	 * 
+	 * @param pOutputStream
+	 * @param pCommand
 	 * @throws IOException
-	 * 
-	 * @author ThunderSL94
+	 * @throws ParseException
 	 */
-	public void sendCommand(Client pClient, String pCommand) throws IOException {
-		pClient.getOutputStream().writeInt(pCommand.length());
-		pClient.getOutputStream().flush();
-
-		pClient.getOutputStream().writeBytes(pCommand);
-		pClient.getOutputStream().flush();
+	public void sendCmd(OutputStream pOutputStream, String pCommand) throws IOException, ParseException{
+		checkCmd(pCommand);
+		
+		byte[] size = new byte[4];
+		int rest = pCommand.length();
+		for(int i=0; i<size.length; i++){
+			size[size.length - (i + 1)] = (byte) (rest / Math.pow(128, size.length - (i + 1)));
+			rest = (int) (rest % Math.pow(128, size.length - (i + 1)));
+		}
+		
+		pOutputStream.write(size);
+		pOutputStream.flush();
+		
+		pOutputStream.write(pCommand.getBytes());
+		pOutputStream.flush();	
 	}
 	
 	/**
-	 * <h1>Remove client</h1>
-	 * Remove the current client and close the session.
 	 * 
-	 * @param pid Id of the current client.
-	 * 
-	 * @throws InterruptedException 
-	 * 
-	 * @author ThunderSL94
+	 * @param pOutputStream
+	 * @param pCommand
+	 * @throws IOException
+	 * @throws ParseException
 	 */
-	public void removeClient(Client pClient) throws IOException, InterruptedException {
-		pClient.getReader().close();
-		pClient.getOutputStream().close();
-		pClient.setOpened(false);
+	public void sendCmd(Client pClient, String pCommand) throws IOException, ParseException{
+		checkCmd(pCommand);
 		
-		System.out.println("Client is disconnected " + pClient.getSocket().getInetAddress());
+		byte[] size = new byte[4];
+		int rest = pCommand.length();
+		for(int i=0; i<size.length; i++){
+			size[size.length - (i + 1)] = (byte) (rest / Math.pow(128, size.length - (i + 1)));
+			rest = (int) (rest % Math.pow(128, size.length - (i + 1)));
+		}
+		
+		pClient.getOutputStream().write(size);
+		pClient.getOutputStream().flush();
+		
+		pClient.getOutputStream().write(pCommand.getBytes());
+		pClient.getOutputStream().flush();	
+	}
+	
+	/**
+	 * 
+	 * @param pBufferedReader
+	 * @param pId
+	 * @return
+	 * @throws IOException
+	 */
+	private String receiveCmd(BufferedReader pBufferedReader, int pId) throws IOException{
+		char[] value = new char[4];
+		int result = pBufferedReader.read(value);
+		
+		if(result >= 0) {
+			int length = 0;
+			for(int i = 0; i < value.length; i++) {
+				length += (int) (value[i] * Math.pow(128, i));
+			}
+			
+			value = new char[length];
+			for( int i=0; i<value.length; i++) {
+				char[] tmp = new char[1];
+				pBufferedReader.read(tmp, 0, 1);
+				value[i] = tmp[0];
+			}
+			
+			return new String(value);
+		}
+		else {
+			removeClient(clients.get(pId));
+			return null;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param pClient
+	 * @throws IOException
+	 */
+	public void removeClient(Client pClient) throws IOException{
+		pClient.getBufferedReader().close();
+		pClient.getOutputStream().close();
+		pClient.setConnected(false);		
 		pClient.getSocket().close();
 		clients.remove(pClient);
+		
+		System.out.println("Client with id " + pClient.getId() + " and type: " + pClient.getType().toString() + " disconnected");
 	}
 	
 	/**
-	 * <h1>Close server</h1>
-	 * Remove all current clients and close the server.
 	 * 
-	 * @throws IOException
-	 * @throws InterruptedException
-	 * 
-	 * @author ThunderSL94
+	 * @return
 	 */
-	public void close() throws IOException, InterruptedException{
-		for( int i=0; i<clients.size(); i++) {
-			removeClient(clients.get(i));
-		}
-		
-		this.opened = false;
-		
-		while(this.listenerThread.isAlive()){
-			this.wait(5);
-		}
-		System.out.println("Close server ...");
-		this.serverSocket.close();		
-	}
-	
-	/**
-	 * <h1>New id</h1>
-	 * Calculate new id in reference of the exist clients.=hs
-	 * 
-	 * @return New id
-	 * 
-	 * @author ThunderSL94
-	 */
-	private int getNewId() {
+	private int generateNewClientId(){
 		int result = 0;
 		
 		for( int i=0; i<clients.size(); i++) {
@@ -279,24 +241,35 @@ public class Server {
 		
 		return result;
 	}
+	
+	/**
+	 * 
+	 * @param pCommand
+	 * @throws ParseException
+	 */
+	private void checkCmd(String pCommand) throws ParseException{
+		JSONParser jsonParser = new JSONParser();
+		jsonParser.parse(pCommand);
+	}
+	
+	/**
+	 * 
+	 * @throws IOException
+	 */
+	public void close() throws IOException{
+		for(int i=0; i<clients.size(); i++)
+			removeClient(clients.get(i));
+		this.opened = false;
+		this.serverSocket.close();
+		System.out.println("Server is closing ...");
+	}
 
 	public boolean isOpened() {
 		return opened;
 	}
 
-	public void setOpened(boolean opened) {
-		this.opened = opened;
-	}
-
-	public ServerSocket getServerSocket() {
-		return serverSocket;
-	}
-
-	public Thread getListenerThread() {
-		return listenerThread;
-	}
-
 	public ArrayList<Client> getClients() {
 		return clients;
 	}
+	
 }

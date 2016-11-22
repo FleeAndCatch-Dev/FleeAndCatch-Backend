@@ -2,6 +2,7 @@ package flee_and_catch.backend;
 import java.io.IOException;
 
 import flee_and_catch.backend.communication.Server;
+import flee_and_catch.backend.exception.OpenConnection;
 
 public class Program {
 
@@ -10,17 +11,18 @@ public class Program {
 	 * Starts the program.
 	 * 
 	 * 
-	 * @param args
+	 * @param args Arguments for application
 	 * 
 	 * @author ThunderSL94
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		Server server;
 		try {
-			server = new Server();
+			Server server = new Server();
 			server.open();
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OpenConnection e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
