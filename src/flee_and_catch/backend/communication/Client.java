@@ -26,14 +26,13 @@ public class Client {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Client(int pId, ClientType pType, boolean pConnected, Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream, Interpreter pInterpreter) {
+	public Client(int pId, boolean pConnected, Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream, Server pServer) {
 		this.id = pId;
-		this.type = pType;
 		this.connected = pConnected;
 		this.socket = pSocket;
 		this.bufferedReader = pBufferedReader;
 		this.outputStream = pOutputStream;
-		this.interpreter = pInterpreter;
+		this.interpreter = new Interpreter(pServer, this);
 	}
 
 	public int getId() {
@@ -42,6 +41,9 @@ public class Client {
 	
 	public ClientType getType() {
 		return type;
+	}
+	public void setType(ClientType type) {
+		this.type = type;
 	}
 
 	public boolean isConnected() {

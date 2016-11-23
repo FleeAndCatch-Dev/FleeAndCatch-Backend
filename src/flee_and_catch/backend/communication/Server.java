@@ -113,22 +113,20 @@ public class Server {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		String jsonString = "{\"id\":\"Client\",\"type\":\"SetId\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
+		String jsonString = "{\"id\":\"Registration\",\"type\":\"SetId\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
 		sendCmd(outputStream, jsonString);
-		jsonString = "{\"id\":\"Client\",\"type\":\"GetType\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
+		jsonString = "{\"id\":\"Registration\",\"type\":\"GetType\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
 		sendCmd(outputStream, jsonString);
 		
-		Interpreter interpreter = new Interpreter(this);
-		
-		ClientType result = ClientType.valueOf(interpreter.interpret(receiveCmd(bufferedReader, pId)));;		
-		Client client = new Client(pId, result, true, pSocket, bufferedReader, outputStream, interpreter);
+		Client client = new Client(pId, true, pSocket, bufferedReader, outputStream, this);
 		clients.add(client);
 		
-		System.out.println("New client added with id:" + String.valueOf(pId) + " and type: " + result.toString());
+		client.setConnected(true);
+		System.out.println("New client added with id:" + String.valueOf(pId));
 		
 		while(client.isConnected()){
 			String currentCmd = receiveCmd(bufferedReader, pId);
-			interpreter.interpret(currentCmd);
+			client.getInterpreter().parse(currentCmd);
 		}
 	}
 	
