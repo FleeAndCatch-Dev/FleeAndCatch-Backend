@@ -7,7 +7,7 @@ import java.net.Socket;
 public class Client {
 
 	private int id;
-	private ClientType type;
+	private Type type;
 	private boolean connected;
 	private Socket socket;
 	private BufferedReader bufferedReader;
@@ -26,33 +26,33 @@ public class Client {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Client(int pId, boolean pConnected, Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream, Server pServer) {
+	public Client(int pId, boolean pConnected, Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream) {
 		this.id = pId;
 		this.connected = pConnected;
 		this.socket = pSocket;
 		this.bufferedReader = pBufferedReader;
 		this.outputStream = pOutputStream;
-		this.interpreter = new Interpreter(pServer, this);
+		this.interpreter = new Interpreter(this);
 	}
 
 	public int getId() {
 		return id;
 	}
 	
-	public ClientType getType() {
+	public Type getType() {
 		return type;
 	}
-	public void setType(ClientType type) {
+	public void setType(Type type) {
 		this.type = type;
 	}
 
 	public boolean isConnected() {
 		return connected;
-	}
+	}	
 	public void setConnected(boolean connected) {
 		this.connected = connected;
 	}
-	
+
 	public Socket getSocket() {
 		return socket;
 	}

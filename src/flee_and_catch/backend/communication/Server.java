@@ -9,49 +9,22 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import flee_and_catch.backend.exception.OpenConnection;
-import flee_and_catch.backend.exception.ParseCommand;
+import flee_and_catch.backend.communication.command.CommandType;
+import flee_and_catch.backend.communication.command.Connection;
+import flee_and_catch.backend.communication.command.connection.ConnectionType;
 
-public class Server {
+public final class Server {
+	private static ServerSocket serverSocket;
+	private static boolean opened;
+	private static ArrayList<Client> clients;
 	
-	private ServerSocket serverSocket;
-	private boolean opened;
-	private ArrayList<Client> clients;
-	
-	/**
-	 * <h1>Constructor</h1>
-	 * Creates an object of the class server.
-	 * 
-	 * @throws IOException
-	 * 
-	 * @author ThunderSL94
-	 */
-	public Server() throws IOException {
-		this.serverSocket = new ServerSocket(Default.port);
-		this.clients = new ArrayList<Client>();
-		this.opened = false;
-	}
-	
-	/**
-	 * 
-	 * @param pPort
-	 * @throws IOException
-	 */
-	public Server(int pPort) throws IOException {
-		this.serverSocket = new ServerSocket(pPort);
-		this.clients = new ArrayList<Client>();
-		this.opened = false;
-	}
-	
-	/**
-	 * 
-	 * @throws OpenConnection
-	 */
-	public void open() throws OpenConnection{
+	public static void open() throws IOException{
 		if(!opened){
+			clients = new ArrayList<Client>();
+			serverSocket = new ServerSocket(Default.port);
 			Thread listenerThread = new Thread(new Runnable() {
 				
 				@Override
@@ -67,14 +40,31 @@ public class Server {
 			listenerThread.start();
 			return;
 		}
-		throw new OpenConnection();
+	}
+
+	public static void open(int pPort) throws IOException{
+		if(!opened){
+			clients = new ArrayList<Client>();
+			serverSocket = new ServerSocket(pPort);
+			serverSocket = new ServerSocket(Default.port);
+			Thread listenerThread = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					try {
+						listen();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			});
+			listenerThread.start();
+			return;
+		}
 	}
 	
-	/**
-	 * 
-	 * @throws IOException
-	 */
-	private void listen() throws IOException{
+	private static void listen() throws IOException {
 		opened = true;
 		while(opened){
 			System.out.println("Wait for clients ...");
@@ -85,13 +75,7 @@ public class Server {
 				public void run() {
 					try {
 						newClient(socket, generateNewClientId());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (ParseException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (ParseCommand e) {
+					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
@@ -100,44 +84,27 @@ public class Server {
 			clientThread.start();
 		}
 	}
-	
-	/**
-	 * 
-	 * @param pSocket
-	 * @param pId
-	 * @throws IOException
-	 * @throws ParseException
-	 * @throws ParseCommand
-	 */
-	private void newClient(Socket pSocket, int pId) throws IOException, ParseException, ParseCommand{
+
+	private static void newClient(Socket pSocket, int pId) throws Exception {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		String jsonString = "{\"id\":\"Registration\",\"type\":\"SetId\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
-		sendCmd(outputStream, jsonString);
-		jsonString = "{\"id\":\"Registration\",\"type\":\"GetType\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(pId) + "}}";
-		sendCmd(outputStream, jsonString);
+		Connection command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.SetId.toString(), new flee_and_catch.backend.communication.command.connection.Client(pId));
+		sendCmd(outputStream, command.GetCommand());
+		command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.GetType.toString(), new flee_and_catch.backend.communication.command.connection.Client(pId));
+		sendCmd(outputStream, command.GetCommand());
 		
-		Client client = new Client(pId, true, pSocket, bufferedReader, outputStream, this);
+		Client client = new Client(pId, true, pSocket, bufferedReader, outputStream);
 		clients.add(client);
 		
-		client.setConnected(true);
 		System.out.println("New client added with id:" + String.valueOf(pId));
 		
 		while(client.isConnected()){
-			String currentCmd = receiveCmd(bufferedReader, pId);
-			client.getInterpreter().parse(currentCmd);
+			client.getInterpreter().parse(receiveCmd(client));
 		}
 	}
 	
-	/**
-	 * 
-	 * @param pOutputStream
-	 * @param pCommand
-	 * @throws IOException
-	 * @throws ParseException
-	 */
-	public void sendCmd(OutputStream pOutputStream, String pCommand) throws IOException, ParseException{
+	public static void sendCmd(OutputStream pOutputStream, String pCommand) throws IOException, JSONException {
 		checkCmd(pCommand);
 		
 		byte[] size = new byte[4];
@@ -151,17 +118,10 @@ public class Server {
 		pOutputStream.flush();
 		
 		pOutputStream.write(pCommand.getBytes());
-		pOutputStream.flush();	
+		pOutputStream.flush();
 	}
 	
-	/**
-	 * 
-	 * @param pOutputStream
-	 * @param pCommand
-	 * @throws IOException
-	 * @throws ParseException
-	 */
-	public void sendCmd(Client pClient, String pCommand) throws IOException, ParseException{
+	public static void sendCmd(Client pClient, String pCommand) throws IOException, JSONException {
 		checkCmd(pCommand);
 		
 		byte[] size = new byte[4];
@@ -175,19 +135,12 @@ public class Server {
 		pClient.getOutputStream().flush();
 		
 		pClient.getOutputStream().write(pCommand.getBytes());
-		pClient.getOutputStream().flush();	
+		pClient.getOutputStream().flush();
 	}
 	
-	/**
-	 * 
-	 * @param pBufferedReader
-	 * @param pId
-	 * @return
-	 * @throws IOException
-	 */
-	private String receiveCmd(BufferedReader pBufferedReader, int pId) throws IOException{
+	private static String receiveCmd(Client pClient) throws IOException{
 		char[] value = new char[4];
-		int result = pBufferedReader.read(value);
+		int result = pClient.getBufferedReader().read(value);
 		
 		if(result >= 0) {
 			int length = 0;
@@ -198,24 +151,19 @@ public class Server {
 			value = new char[length];
 			for( int i=0; i<value.length; i++) {
 				char[] tmp = new char[1];
-				pBufferedReader.read(tmp, 0, 1);
+				pClient.getBufferedReader().read(tmp, 0, 1);
 				value[i] = tmp[0];
 			}
 			
 			return new String(value);
 		}
 		else {
-			removeClient(clients.get(pId));
+			removeClient(pClient);
 			return null;
 		}
 	}
 	
-	/**
-	 * 
-	 * @param pClient
-	 * @throws IOException
-	 */
-	public void removeClient(Client pClient) throws IOException{
+	public static void removeClient(Client pClient) throws IOException{
 		pClient.getBufferedReader().close();
 		pClient.getOutputStream().close();
 		pClient.setConnected(false);		
@@ -224,12 +172,8 @@ public class Server {
 		
 		System.out.println("Client with id " + pClient.getId() + " and type: " + pClient.getType().toString() + " disconnected");
 	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	private int generateNewClientId(){
+
+	private static int generateNewClientId() {
 		int result = 0;
 		
 		for( int i=0; i<clients.size(); i++) {
@@ -240,34 +184,15 @@ public class Server {
 		return result;
 	}
 	
-	/**
-	 * 
-	 * @param pCommand
-	 * @throws ParseException
-	 */
-	private void checkCmd(String pCommand) throws ParseException{
-		JSONParser jsonParser = new JSONParser();
-		jsonParser.parse(pCommand);
-	}
-	
-	/**
-	 * 
-	 * @throws IOException
-	 */
-	public void close() throws IOException{
-		for(int i=0; i<clients.size(); i++)
-			removeClient(clients.get(i));
-		this.opened = false;
-		this.serverSocket.close();
-		System.out.println("Server is closing ...");
+	private static JSONObject checkCmd(String pCommand) throws JSONException {
+		return new JSONObject(pCommand);
 	}
 
-	public boolean isOpened() {
+	public static boolean isOpened() {
 		return opened;
 	}
 
-	public ArrayList<Client> getClients() {
+	public static ArrayList<Client> getClients() {
 		return clients;
 	}
-	
 }

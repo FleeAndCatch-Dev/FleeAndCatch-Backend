@@ -1,65 +1,57 @@
 package flee_and_catch.backend.communication;
 
-import java.io.IOException;
+import org.json.JSONObject;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
+import com.google.gson.Gson;
 import com.sun.org.apache.bcel.internal.util.Objects;
 
-import flee_and_catch.backend.exception.ParseCommand;
+import flee_and_catch.backend.communication.command.CommandType;
+import flee_and_catch.backend.communication.command.Connection;
+import flee_and_catch.backend.communication.command.connection.ConnectionType;
+
 public class Interpreter {
-	private Server server;
+
 	private Client client;
-	private JSONParser parser;
+	private Gson gson;
 	
-	public Interpreter(Server pServer, Client pClient){
-		this.parser = new JSONParser();
-		this.server = pServer;
+	public Interpreter(Client pClient){
 		this.client = pClient;
+		this.gson = new Gson();
 	}
-	
-	public void parse(String pCommand) throws ParseException, ParseCommand, IOException{
-		JSONObject jsonCommand = new JSONObject();
-		jsonCommand = (JSONObject) parser.parse(pCommand);
-		if(Objects.equals("@@fleeandcatch@@", (String) jsonCommand.get("apiid"))){
-			switch (((String) jsonCommand.get("id")).toLowerCase()) {
-			case "registration":
-				registration(jsonCommand);
-				return;
-			case "disconnection":
-				disconnect(jsonCommand);
+
+	public void parse(String pCommand) throws Exception {
+		JSONObject jsonCommand = new JSONObject(pCommand);
+		
+		if(!Objects.equals("@@fleeandcatch@@", (String) jsonCommand.get("apiid")))
+			throw new Exception("Wrong apiid in json command");
+		CommandType.Type id = CommandType.Type.valueOf((String) jsonCommand.get("id"));
+		
+		switch (id) {
+			case Connection:
+				connection(jsonCommand);
 				return;
 			default:
-				break;
-			}
+				throw new Exception("Argument out of range");
 		}
-		throw new ParseCommand();
 	}
-	
-	private void registration(JSONObject pCommand) throws ParseCommand{
-		String type = ((String) pCommand.get("type")).toLowerCase();
-		if(Objects.equals("settype", type)){
-			JSONObject jsonclient = (JSONObject) pCommand.get("client");
-			String clientType = (String) jsonclient.get("type");
-			client.setType(ClientType.valueOf(clientType));
-			return;
+
+	private void connection(JSONObject pCommand) throws Exception {
+		if(pCommand == null) throw new NullPointerException();
+		ConnectionType.Type type = ConnectionType.Type.valueOf((String) pCommand.get("type"));
+		Connection command = gson.fromJson(pCommand.toString(), Connection.class);
+		
+		switch(type){
+			case SetType:
+				client.setType(Type.valueOf(command.getClient().getType()));
+				System.out.println("Type of client: " + client.getId() + " set as " + client.getType().toString());
+				return;
+			case Disconnect:
+				Connection cmd = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.Disconnect.toString(), new flee_and_catch.backend.communication.command.connection.Client(client.getId()));
+				Server.sendCmd(client, cmd.GetCommand());
+				Server.removeClient(client);
+				return;
+			default:
+				throw new Exception("Argument out of range");
 		}
-		throw new ParseCommand();
-	}
-	
-	private void disconnect(JSONObject pCommand) throws ParseCommand, IOException, ParseException{
-		JSONObject jsonclient = (JSONObject) pCommand.get("client");
-		String type = ((String) pCommand.get("type")).toLowerCase();
-		if(Objects.equals("disconnect", type)){
-			Object clientid = jsonclient.get("id");
-			Client client = server.getClients().get(Integer.valueOf(clientid.toString()));
-			String cmd = "{\"id\":\"Disconnection\",\"type\":\"Disconnect\",\"apiid\":\"@@fleeandcatch@@\",\"errorhandling\":\"ignoreerrors\",\"client\":{\"id\":" + String.valueOf(client.getId()) + ",\"type\":\"" + client.getType().toString() + "\"}}";
-			server.sendCmd(client,  cmd);
-			server.removeClient(client);
-			return;
-		}
-		throw new ParseCommand();
 	}
 }
