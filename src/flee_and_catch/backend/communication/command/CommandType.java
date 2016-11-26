@@ -5,7 +5,7 @@ public class CommandType {
 	protected Type type;
 	
 	public enum Type{
-		Connection
+		Connection, Synchronisation
 	}
 	
 	public CommandType(Type pType){

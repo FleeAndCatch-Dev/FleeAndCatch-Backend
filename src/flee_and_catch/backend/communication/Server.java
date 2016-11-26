@@ -8,22 +8,22 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import flee_and_catch.backend.communication.command.CommandType;
-import flee_and_catch.backend.communication.command.Connection;
+import flee_and_catch.backend.communication.command.connection.Connection;
 import flee_and_catch.backend.communication.command.connection.ConnectionType;
 
 public final class Server {
 	private static ServerSocket serverSocket;
 	private static boolean opened;
-	private static ArrayList<Client> clients;
+	private static ArrayList<Client> clients = new ArrayList<Client>();
 	
 	public static void open() throws IOException{
 		if(!opened){
-			clients = new ArrayList<Client>();
 			serverSocket = new ServerSocket(Default.port);
 			Thread listenerThread = new Thread(new Runnable() {
 				
@@ -44,7 +44,6 @@ public final class Server {
 
 	public static void open(int pPort) throws IOException{
 		if(!opened){
-			clients = new ArrayList<Client>();
 			serverSocket = new ServerSocket(pPort);
 			serverSocket = new ServerSocket(Default.port);
 			Thread listenerThread = new Thread(new Runnable() {
@@ -89,9 +88,9 @@ public final class Server {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		Connection command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.SetId.toString(), new flee_and_catch.backend.communication.command.connection.Client(pId));
+		Connection command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.SetId.toString(), new flee_and_catch.backend.communication.command.connection.Client(pId, "null", "null"));
 		sendCmd(outputStream, command.GetCommand());
-		command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.GetType.toString(), new flee_and_catch.backend.communication.command.connection.Client(pId));
+		command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.GetType.toString(), new flee_and_catch.backend.communication.command.connection.Client(pId, "null", "null"));
 		sendCmd(outputStream, command.GetCommand());
 		
 		Client client = new Client(pId, true, pSocket, bufferedReader, outputStream);
@@ -175,9 +174,26 @@ public final class Server {
 
 	private static int generateNewClientId() {
 		int result = 0;
+		ArrayList<Client> tmpclients = clients;
+		ArrayList<Client> sortclients = new ArrayList<Client>();
+		
+		for(int j=0; j<tmpclients.size(); j++){
+			for(int i=0; i<tmpclients.size() - 1; i++){
+				Client client;
+				if(tmpclients.get(i).getId() < tmpclients.get(i + 1).getId()){
+					continue;
+				}
+				client = tmpclients.get(i);
+				sortclients.add(tmpclients.get(i));
+				tmpclients.remove(i);				
+			}
+		}
+		
+		if(sortclients.size() > 0)
+			clients = sortclients;	
 		
 		for( int i=0; i<clients.size(); i++) {
-			if(clients.get(i).getId() > result && (clients.get(i + 1).getId()) == (result + 1))
+			if(clients.get(i).getId() == result)
 				result++;
 		}
 		

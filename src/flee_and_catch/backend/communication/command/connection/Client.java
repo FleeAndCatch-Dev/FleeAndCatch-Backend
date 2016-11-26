@@ -8,10 +8,10 @@ public class Client {
 	private String type;
 	private String subtype;
 	
-	public Client(int pId){
+	public Client(int pId, String pType, String pSubType){
 		this.id = pId;
-		this.type = "null";
-		this.subtype = "null";
+		this.type = pType;
+		this.subtype = pSubType;
 	}
 	
 	public JSONObject GetClient() throws JSONException{

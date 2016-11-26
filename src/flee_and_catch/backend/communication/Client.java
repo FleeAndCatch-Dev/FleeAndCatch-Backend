@@ -7,7 +7,8 @@ import java.net.Socket;
 public class Client {
 
 	private int id;
-	private Type type;
+	private String type;
+	private String subtype;
 	private boolean connected;
 	private Socket socket;
 	private BufferedReader bufferedReader;
@@ -39,11 +40,18 @@ public class Client {
 		return id;
 	}
 	
-	public Type getType() {
+	public String getType() {
 		return type;
 	}
-	public void setType(Type type) {
+	public void setType(String type) {
 		this.type = type;
+	}
+	
+	public String getSubtype() {
+		return subtype;
+	}
+	public void setSubtype(String subtype) {
+		this.subtype = subtype;
 	}
 
 	public boolean isConnected() {

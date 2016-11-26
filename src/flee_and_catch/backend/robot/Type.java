@@ -2,7 +2,7 @@ package flee_and_catch.backend.robot;
 
 public enum Type {
 	
-	THREEWHEELDRIVE ("ThreeWheelDrive");
+	ThreeWheelDrive ("ThreeWheelDrive");
 	
 	private String name;
 	

@@ -1,9 +1,9 @@
-package flee_and_catch.backend.communication.command;
+package flee_and_catch.backend.communication.command.connection;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import flee_and_catch.backend.communication.command.connection.Client;
+import flee_and_catch.backend.communication.command.Command;
 
 public class Connection extends Command {
 	private Client client;
