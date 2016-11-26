@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -168,8 +167,6 @@ public final class Server {
 		pClient.setConnected(false);		
 		pClient.getSocket().close();
 		clients.remove(pClient);
-		
-		System.out.println("Client with id " + pClient.getId() + " and type: " + pClient.getType().toString() + " disconnected");
 	}
 
 	private static int generateNewClientId() {
@@ -179,11 +176,9 @@ public final class Server {
 		
 		for(int j=0; j<tmpclients.size(); j++){
 			for(int i=0; i<tmpclients.size() - 1; i++){
-				Client client;
 				if(tmpclients.get(i).getId() < tmpclients.get(i + 1).getId()){
 					continue;
 				}
-				client = tmpclients.get(i);
 				sortclients.add(tmpclients.get(i));
 				tmpclients.remove(i);				
 			}

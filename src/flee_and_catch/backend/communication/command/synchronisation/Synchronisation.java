@@ -1,13 +1,10 @@
 package flee_and_catch.backend.communication.command.synchronisation;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import flee_and_catch.backend.communication.command.Command;
 import flee_and_catch.backend.communication.command.connection.Client;
