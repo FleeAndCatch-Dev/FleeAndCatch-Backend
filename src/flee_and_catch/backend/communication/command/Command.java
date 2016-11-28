@@ -8,6 +8,15 @@ public abstract class Command {
 	protected String apiid;
 	protected String errorhandling;
 	
+	/**
+	 * <h1>Constructor</h1>
+	 * Create a new command object.
+	 * 
+	 * @param pId Id as command type.
+	 * @param pType Type as sub command type.
+	 * 
+	 * @author ThunderSL94
+	 */
 	protected Command(String pId, String pType){
 		this.id = pId;
 		this.type = pType;

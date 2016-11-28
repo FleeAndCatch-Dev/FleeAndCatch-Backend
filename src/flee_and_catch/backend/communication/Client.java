@@ -19,11 +19,11 @@ public class Client {
 	 * <h1>Constructor</h1>
 	 * Creates an object of the class client. The client represents a connection of a component in this application.
 	 * 
-	 * 
 	 * @param pId Id of the client
-	 * @param pOpened Show true, if the thread of the client is open.
+	 * @param pConnected Show true, if the thread of the client is open.
 	 * @param pSocket The socket of the client.
-	 * @param pThread The thread of the client.
+	 * @param pBufferedReader The reader of the client.
+	 * @param pOutputStream The output of the client.
 	 * 
 	 * @author ThunderSL94
 	 */

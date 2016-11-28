@@ -13,6 +13,17 @@ public class Synchronisation extends Command {
 	private Client client;
 	private ArrayList<Robot> robots;
 	
+	/**
+	 * <h1>Constructor</h1>
+	 * Create new synchronization object for json command.
+	 * 
+	 * @param pId Id as command type.
+	 * @param pType Type as command sub type.
+	 * @param pClient Client as client object.
+	 * @param pRobots Robots as robot list.
+	 * 
+	 * @author ThunderSL94
+	 */
 	public Synchronisation(String pId, String pType, Client pClient, ArrayList<flee_and_catch.backend.robot.Robot> pRobots){
 		super(pId, pType);
 		this.client = pClient;
@@ -21,6 +32,12 @@ public class Synchronisation extends Command {
 		createRobots(pRobots);
 	}
 	
+	/**
+	 * <h1>Get command</h1>
+	 * Get command as json string.
+	 * 
+	 * @author ThunderSL94
+	 */
 	public String GetCommand() throws JSONException{
 		JSONArray robotarray = new JSONArray();
 		for(int i=0; i<robots.size(); i++){
@@ -42,6 +59,14 @@ public class Synchronisation extends Command {
 		return client;
 	}
 	
+	/**
+	 * <h1>Create robots</h1>
+	 * Create array of robots for json command.
+	 * 
+	 * @param pRobots Robots from defined robots in the backend.
+	 * 
+	 * @author ThunderSL94
+	 */
 	private void createRobots(ArrayList<flee_and_catch.backend.robot.Robot> pRobots){
 		for(int i=0; i<pRobots.size(); i++){
 			robots.add(new Robot(pRobots.get(i).getId(), pRobots.get(i).getType().toString()));

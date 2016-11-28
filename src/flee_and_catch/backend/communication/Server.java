@@ -21,6 +21,14 @@ public final class Server {
 	private static boolean opened;
 	private static ArrayList<Client> clients = new ArrayList<Client>();
 	
+	/**
+	 * <h1>Open server</h1>
+	 * Open the server at a default port.
+	 * 
+	 * @throws IOException
+	 * 
+	 * @author ThunderSL94
+	 */
 	public static void open() throws IOException{
 		if(!opened){
 			serverSocket = new ServerSocket(Default.port);
@@ -41,6 +49,16 @@ public final class Server {
 		}
 	}
 
+	/**
+	 * <h1>Open server</h1>
+	 * Open server at a given port.
+	 * 
+	 * @param pPort Port as integer.
+	 * 
+	 * @throws IOException
+	 * 
+	 * @author ThunderSL94
+	 */
 	public static void open(int pPort) throws IOException{
 		if(!opened){
 			serverSocket = new ServerSocket(pPort);
@@ -62,6 +80,14 @@ public final class Server {
 		}
 	}
 	
+	/**
+	 * <h1>Listen</h1>
+	 * Listen on port for new clients. Open a new thread for every accepted client.
+	 * 
+	 * @throws IOException
+	 * 
+	 * @author ThunderSL94
+	 */
 	private static void listen() throws IOException {
 		opened = true;
 		while(opened){
@@ -83,6 +109,17 @@ public final class Server {
 		}
 	}
 
+	/**
+	 * <h1>New client</h1>
+	 * Add new client and wait for new commands at the socket.
+	 * 
+	 * @param pSocket Current socket.
+	 * @param pId Id of the client.
+	 * 
+	 * @throws Exception
+	 * 
+	 * @author ThunderSL94
+	 */
 	private static void newClient(Socket pSocket, int pId) throws Exception {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
@@ -102,6 +139,18 @@ public final class Server {
 		}
 	}
 	
+	/**
+	 * <h1>Send command</h1>
+	 * Send json command to client.
+	 * 
+	 * @param pOutputStream Outputstream of client.
+	 * @param pCommand Command as json string.
+	 * 
+	 * @throws IOException
+	 * @throws JSONException
+	 * 
+	 * @author ThunderSL94
+	 */
 	public static void sendCmd(OutputStream pOutputStream, String pCommand) throws IOException, JSONException {
 		checkCmd(pCommand);
 		
@@ -119,6 +168,18 @@ public final class Server {
 		pOutputStream.flush();
 	}
 	
+	/**
+	 * <h1>Send command</h1>
+	 * Send json command to client.
+	 * 
+	 * @param pClient Client to send a command.
+	 * @param pCommand Command as json string.
+	 * 
+	 * @throws IOException
+	 * @throws JSONException
+	 * 
+	 * @author ThunderSL94
+	 */
 	public static void sendCmd(Client pClient, String pCommand) throws IOException, JSONException {
 		checkCmd(pCommand);
 		
@@ -136,6 +197,16 @@ public final class Server {
 		pClient.getOutputStream().flush();
 	}
 	
+	/**
+	 * <h1>Receive command</h1>
+	 * Receive command from client.
+	 * 
+	 * @param pClient Client to receive a command.
+	 * @return Command as json string.
+	 * @throws IOException
+	 * 
+	 * @author ThunderSL94
+	 */
 	private static String receiveCmd(Client pClient) throws IOException{
 		char[] value = new char[4];
 		int result = pClient.getBufferedReader().read(value);
@@ -161,6 +232,15 @@ public final class Server {
 		}
 	}
 	
+	/**
+	 * <h1>Remove client</h1>
+	 * Remove the connection to a client.
+	 * 
+	 * @param pClient Client to remove.
+	 * @throws IOException
+	 * 
+	 * @author ThunderSL94
+	 */
 	public static void removeClient(Client pClient) throws IOException{
 		pClient.getBufferedReader().close();
 		pClient.getOutputStream().close();
@@ -169,6 +249,14 @@ public final class Server {
 		clients.remove(pClient);
 	}
 
+	/**
+	 * <h1>Generate new id</h1>
+	 * Generate new client id and sort the list.
+	 * 
+	 * @return id as integer.
+	 * 
+	 * @author ThunderSL94
+	 */
 	private static int generateNewClientId() {
 		int result = 0;
 		ArrayList<Client> tmpclients = clients;
@@ -195,6 +283,18 @@ public final class Server {
 		return result;
 	}
 	
+	/**
+	 * <h1>Check json</h1>
+	 * Check string of correct json syntax.
+	 * 
+	 * @param pCommand Command as string.
+	 * 
+	 * @return parsed json object.
+	 * 
+	 * @throws JSONException
+	 * 
+	 * @author ThunderSL94
+	 */
 	private static JSONObject checkCmd(String pCommand) throws JSONException {
 		return new JSONObject(pCommand);
 	}

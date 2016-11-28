@@ -20,11 +20,28 @@ public class Interpreter {
 	private Client client;
 	private Gson gson;
 	
+	/**
+	 * <h1>Constructor</h1>
+	 * Create an object of the class interpreter.
+	 * 
+	 * @param pClient Client object.
+	 * 
+	 * @author ThunderSL94
+	 */
 	public Interpreter(Client pClient){
 		this.client = pClient;
 		this.gson = new Gson();
 	}
 
+	/**
+	 * <h1Parse</h1>
+	 * Parse a json string from the server and check the command of the right apiid and the different id.
+	 * 
+	 * @param pCommand Json command as string.
+	 * @throws Exception
+	 * 
+	 * @author ThunderSL94
+	 */
 	public void parse(String pCommand) throws Exception {
 		JSONObject jsonCommand = new JSONObject(pCommand);
 		
@@ -44,6 +61,15 @@ public class Interpreter {
 		}
 	}
 
+	/**
+	 * <h1>Parse connection</h1>
+	 * Parse of a connection command.
+	 * 
+	 * @param pCommand Command as json object.
+	 * @throws Exception
+	 * 
+	 * @author ThunderSL94
+	 */
 	private void connection(JSONObject pCommand) throws Exception {
 		if(pCommand == null) throw new NullPointerException();
 		ConnectionType.Type type = ConnectionType.Type.valueOf((String) pCommand.get("type"));
@@ -105,6 +131,15 @@ public class Interpreter {
 		}
 	}
 	
+	/**
+	 * <h1>Parse synchronization</h1>
+	 * Parse of a synchronization command.
+	 * 
+	 * @param pCommand Command as json object.
+	 * @throws Exception
+	 * 
+	 * @author ThunderSL94
+	 */
 	private void synchronisation(JSONObject pCommand) throws Exception{
 		if(pCommand == null) throw new NullPointerException();
 		SynchronisationType.Type type = SynchronisationType.Type.valueOf((String) pCommand.get("type"));
