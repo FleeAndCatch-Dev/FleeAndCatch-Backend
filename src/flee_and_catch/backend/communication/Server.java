@@ -13,12 +13,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import flee_and_catch.backend.communication.command.CommandType;
-import flee_and_catch.backend.communication.command.connection.Connection;
-import flee_and_catch.backend.communication.command.connection.ConnectionType;
+import flee_and_catch.backend.communication.command.Connection;
+import flee_and_catch.backend.communication.command.ConnectionType;
+import flee_and_catch.backend.communication.command.Identification;
 
 public final class Server {
-	private static ServerSocket serverSocket;
 	private static boolean opened;
+	private static int port;
+	private static ServerSocket serverSocket;
 	private static ArrayList<Client> clients = new ArrayList<Client>();
 	
 	/**
@@ -31,7 +33,8 @@ public final class Server {
 	 */
 	public static void open() throws IOException{
 		if(!opened){
-			serverSocket = new ServerSocket(Default.port);
+			port = Default.port;
+			serverSocket = new ServerSocket(port);
 			Thread listenerThread = new Thread(new Runnable() {
 				
 				@Override
@@ -61,8 +64,8 @@ public final class Server {
 	 */
 	public static void open(int pPort) throws IOException{
 		if(!opened){
-			serverSocket = new ServerSocket(pPort);
-			serverSocket = new ServerSocket(Default.port);
+			port = pPort;
+			serverSocket = new ServerSocket(port);
 			Thread listenerThread = new Thread(new Runnable() {
 				
 				@Override
@@ -124,12 +127,12 @@ public final class Server {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		Connection command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.SetId.toString(), new flee_and_catch.backend.communication.command.connection.Client(pId, "null", "null"));
-		sendCmd(outputStream, command.GetCommand());
-		command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.GetType.toString(), new flee_and_catch.backend.communication.command.connection.Client(pId, "null", "null"));
-		sendCmd(outputStream, command.GetCommand());
+		Connection command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.SetId.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
+		sendCmd(outputStream, command.getCommand());
+		command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.GetType.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
+		sendCmd(outputStream, command.getCommand());
 		
-		Client client = new Client(pId, true, pSocket, bufferedReader, outputStream);
+		Client client = new Client(true, pId, pSocket.getInetAddress().getHostAddress(), port, pSocket, bufferedReader, outputStream);
 		clients.add(client);
 		
 		System.out.println("New client added with id:" + String.valueOf(pId));

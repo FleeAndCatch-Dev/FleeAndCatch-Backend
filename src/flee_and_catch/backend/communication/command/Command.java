@@ -24,7 +24,7 @@ public abstract class Command {
 		this.apiid = "@@fleeandcatch@@";
 	}
 	
-	public abstract String GetCommand() throws JSONException;
+	public abstract String getCommand() throws JSONException;
 
 	public String getId() {
 		return id;

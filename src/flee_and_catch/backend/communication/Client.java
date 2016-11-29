@@ -6,10 +6,12 @@ import java.net.Socket;
 
 public class Client {
 
-	private int id;
-	private String type;
-	private String subtype;
 	private boolean connected;
+	private int id;
+	private String address;
+	private int port;
+	private String type;
+	private String subtype;	
 	private Socket socket;
 	private BufferedReader bufferedReader;
 	private OutputStream outputStream;
@@ -27,9 +29,11 @@ public class Client {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Client(int pId, boolean pConnected, Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream) {
-		this.id = pId;
+	public Client(boolean pConnected, int pId, String pAddress, int pPort,Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream) {
 		this.connected = pConnected;
+		this.id = pId;
+		this.address = pAddress;
+		this.port = pPort;
 		this.socket = pSocket;
 		this.bufferedReader = pBufferedReader;
 		this.outputStream = pOutputStream;
@@ -40,6 +44,14 @@ public class Client {
 		return id;
 	}
 	
+	public String getAddress() {
+		return address;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
 	public String getType() {
 		return type;
 	}
