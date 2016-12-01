@@ -21,7 +21,6 @@ public class Program {
 	public static void main(String[] args) {
 		try {
 			Server.open();
-			RobotController.getRobots().add(new Robot(new Identification(1, "192.168.0.1", 5000, "Robot", "ThreeWheelDrive"), new Position(0, 0, 0), 0));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
