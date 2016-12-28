@@ -1,8 +1,6 @@
 package flee_and_catch.backend.app;
 
 import flee_and_catch.backend.communication.command.Identification;
-import flee_and_catch.backend.component.AppType;
-import flee_and_catch.backend.component.IdentificationType;
 
 public class App {
 	private Identification identification;

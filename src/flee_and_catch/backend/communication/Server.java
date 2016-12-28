@@ -127,9 +127,9 @@ public final class Server {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		Connection command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.SetId.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
+		Connection command = new Connection(CommandType.Connection.toString(), ConnectionType.SetId.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
 		sendCmd(outputStream, command.getCommand());
-		command = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.GetType.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
+		command = new Connection(CommandType.Connection.toString(), ConnectionType.GetType.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
 		sendCmd(outputStream, command.getCommand());
 		
 		Client client = new Client(true, pId, pSocket.getInetAddress().getHostAddress(), port, pSocket, bufferedReader, outputStream);
@@ -260,7 +260,7 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private static int generateNewClientId() {
+	public static int generateNewClientId() {
 		int result = 0;
 		ArrayList<Client> tmpclients = clients;
 		ArrayList<Client> sortclients = new ArrayList<Client>();

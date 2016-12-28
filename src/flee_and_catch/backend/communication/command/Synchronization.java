@@ -7,7 +7,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Synchronization extends Command {
-	private Identification identification;
 	private ArrayList<Robot> robots;
 	
 	/**
@@ -22,8 +21,7 @@ public class Synchronization extends Command {
 	 * @author ThunderSL94
 	 */
 	public Synchronization(String pId, String pType, Identification pIdentification, ArrayList<Robot> pRobots){
-		super(pId, pType);
-		this.identification = pIdentification;
+		super(pId, pType, pIdentification);
 		this.robots = pRobots;
 	}
 
@@ -49,10 +47,6 @@ public class Synchronization extends Command {
 		command.put("robots", robotarray);
 		
 		return command.toString();
-	}
-
-	public Identification getIdentification() {
-		return identification;
 	}
 
 	public ArrayList<Robot> getRobots() {

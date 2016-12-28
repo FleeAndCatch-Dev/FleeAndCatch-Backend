@@ -3,7 +3,8 @@ package flee_and_catch.backend.communication.command;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Connection extends Command {	
+public class Control extends Command {
+	private Steering steering;
 	/**
 	 * <h1>Constructor</h1>
 	 * Create new connection object for json command.
@@ -14,9 +15,8 @@ public class Connection extends Command {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Connection(String pId, String pType, Identification pIdentification){
+	protected Control(String pId, String pType, Identification pIdentification) {
 		super(pId, pType, pIdentification);
-		
 	}
 	
 	/**
@@ -34,7 +34,9 @@ public class Connection extends Command {
 		command.put("apiid", apiid);
 		command.put("errorhandling", errorhandling);
 		command.put("identification", identification.getJSONObject());
+		command.put("control", steering.getJSONObject());
 		
 		return command.toString();
 	}
+
 }

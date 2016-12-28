@@ -10,15 +10,14 @@ import flee_and_catch.backend.app.AppController;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.Connection;
 import flee_and_catch.backend.communication.command.ConnectionType;
-import flee_and_catch.backend.communication.command.Identification;
 import flee_and_catch.backend.communication.command.Position;
 import flee_and_catch.backend.communication.command.Synchronization;
 import flee_and_catch.backend.communication.command.SynchronizationType;
 import flee_and_catch.backend.component.RobotType;
 import flee_and_catch.backend.component.IdentificationType;
-import flee_and_catch.backend.component.IdentificationType.Typ;
 import flee_and_catch.backend.robot.RobotController;
 import flee_and_catch.backend.robot.ThreeWheelDrive;
+import flee_and_catch.backend.view.View;
 
 public class Interpreter {
 
@@ -52,7 +51,7 @@ public class Interpreter {
 		
 		if(!Objects.equals("@@fleeandcatch@@", (String) jsonCommand.get("apiid")))
 			throw new Exception("Wrong apiid in json command");
-		CommandType.Type id = CommandType.Type.valueOf((String) jsonCommand.get("id"));
+		CommandType id = CommandType.valueOf((String) jsonCommand.get("id"));
 		
 		switch (id) {
 			case Connection:
@@ -77,36 +76,40 @@ public class Interpreter {
 	 */
 	private void connection(JSONObject pCommand) throws Exception {
 		if(pCommand == null) throw new NullPointerException();
-		ConnectionType.Type type = ConnectionType.Type.valueOf((String) pCommand.get("type"));
+		ConnectionType type = ConnectionType.valueOf((String) pCommand.get("type"));
 		Connection command = gson.fromJson(pCommand.toString(), Connection.class);
-		IdentificationType.Typ clienttype;
+		IdentificationType clienttype;
 		switch(type){
 			case SetType:
 				client.setType(command.getIdentification().getType());
 				client.setSubtype(command.getIdentification().getSubtype());
-				clienttype = IdentificationType.Typ.valueOf(command.getIdentification().getType());			
+				clienttype = IdentificationType.valueOf(command.getIdentification().getType());			
 				switch(clienttype){
 				case App:
 					//Add app
 					AppController.getApps().add(new App(command.getIdentification()));
+					View.setMobileDevice(AppController.getApps().size());
 					break;
 				case Robot:
 					//Add robot
-					RobotType.Type robottype = RobotType.Type.valueOf(command.getIdentification().getSubtype());
+					RobotType robottype = RobotType.valueOf(command.getIdentification().getSubtype());
 					switch(robottype){
 						case ThreeWheelDrive:
 							RobotController.getRobots().add(new ThreeWheelDrive(command.getIdentification(), new Position(0, 0, 0), 0));	
 							break;
+					default:
+						break;
 					}
+					View.setRobots(RobotController.getRobots().size());
 					break;
 				}
 				System.out.println("Type of client: " + client.getId() + " set as " + client.getType().toString());
 				return;
 			case Disconnect:
-				Connection cmd = new Connection(CommandType.Type.Connection.toString(), ConnectionType.Type.Disconnect.toString(), command.getIdentification());
+				Connection cmd = new Connection(CommandType.Connection.toString(), ConnectionType.Disconnect.toString(), command.getIdentification());
 				
 				Server.sendCmd(client, cmd.getCommand());
-				clienttype = Typ.valueOf(command.getIdentification().getType());
+				clienttype = IdentificationType.valueOf(command.getIdentification().getType());
 				switch(clienttype){
 				case App:
 					//Remove app
@@ -146,12 +149,12 @@ public class Interpreter {
 	 */
 	private void synchronisation(JSONObject pCommand) throws Exception{
 		if(pCommand == null) throw new NullPointerException();
-		SynchronizationType.Type type = SynchronizationType.Type.valueOf((String) pCommand.get("type"));
+		SynchronizationType type = SynchronizationType.valueOf((String) pCommand.get("type"));
 		Synchronization command = gson.fromJson(pCommand.toString(), Synchronization.class);
 		
 		switch(type){
 			case GetRobots:
-				Synchronization cmd = new Synchronization(CommandType.Type.Synchronisation.toString(), SynchronizationType.Type.SetRobots.toString(), command.getIdentification(), RobotController.getRobots());
+				Synchronization cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), command.getIdentification(), RobotController.getRobots());
 				Server.sendCmd(client, cmd.getCommand());
 				return;
 			default:
