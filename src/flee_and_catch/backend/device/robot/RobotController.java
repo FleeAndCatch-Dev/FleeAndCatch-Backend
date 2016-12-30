@@ -1,8 +1,6 @@
-package flee_and_catch.backend.robot;
+package flee_and_catch.backend.device.robot;
 
 import java.util.ArrayList;
-
-import flee_and_catch.backend.communication.command.Robot;
 
 public final class RobotController {
 	private static ArrayList<Robot> robots = new ArrayList<Robot>();
@@ -13,7 +11,7 @@ public final class RobotController {
 	
 	public static void changeActive(Robot pRobot, boolean pState){
 		for(int i=0; i<RobotController.getRobots().size(); i++){
-			if(RobotController.getRobots().get(i).getIdentification().getId() == pRobot.getIdentification().getId()){
+			if(RobotController.getRobots().get(i).getClientIdentification().getId() == pRobot.getClientIdentification().getId()){
 				//Check if robots equal
 				RobotController.getRobots().get(i).setActive(pState);
 			}

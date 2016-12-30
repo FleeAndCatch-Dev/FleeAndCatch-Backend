@@ -1,15 +1,23 @@
-package flee_and_catch.backend.communication.command;
+package flee_and_catch.backend.device.robot;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Robot {
-	private Identification identification;
+import flee_and_catch.backend.communication.command.Position;
+import flee_and_catch.backend.communication.identification.ClientIdentification;
+import flee_and_catch.backend.communication.identification.RobotIdentification;
+import flee_and_catch.backend.device.Device;
+
+public class Robot implements Device {
+	
+	private ClientIdentification clientidentification;
+	private RobotIdentification identification;
 	private boolean active;
 	private Position position;
 	private double speed;
 	
-	public Robot(Identification pIdentification, Position pPosition, double pSpeed){
+	public Robot(ClientIdentification pClientIdentification, RobotIdentification pIdentification, Position pPosition, double pSpeed){
+		this.clientidentification = pClientIdentification;
 		this.identification = pIdentification;
 		this.active = false;
 		this.position = pPosition;
@@ -27,6 +35,7 @@ public class Robot {
 	 */
 	public JSONObject getJSONObject() throws JSONException{
 		JSONObject jsonRobot = new JSONObject();
+		jsonRobot.put("clientidentification", clientidentification.getJSONObject());
 		jsonRobot.put("identification", identification.getJSONObject());
 		jsonRobot.put("active", active);
 		jsonRobot.put("position", position.getJSONObject());
@@ -34,8 +43,12 @@ public class Robot {
 
 		return jsonRobot;
 	}
-	
-	public Identification getIdentification() {
+
+	public ClientIdentification getClientIdentification() {
+		return clientidentification;
+	}
+
+	public RobotIdentification getIdentification() {
 		return identification;
 	}
 	

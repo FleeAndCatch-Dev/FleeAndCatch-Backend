@@ -5,20 +5,18 @@ import org.json.JSONObject;
 import com.google.gson.Gson;
 import com.sun.org.apache.bcel.internal.util.Objects;
 
-import flee_and_catch.backend.app.App;
-import flee_and_catch.backend.app.AppController;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.Connection;
 import flee_and_catch.backend.communication.command.ConnectionType;
-import flee_and_catch.backend.communication.command.Position;
 import flee_and_catch.backend.communication.command.Synchronization;
 import flee_and_catch.backend.communication.command.SynchronizationType;
 import flee_and_catch.backend.communication.command.Control;
 import flee_and_catch.backend.communication.command.ControlType;
-import flee_and_catch.backend.component.RobotType;
+import flee_and_catch.backend.device.app.App;
+import flee_and_catch.backend.device.app.AppController;
+import flee_and_catch.backend.device.robot.Robot;
+import flee_and_catch.backend.device.robot.RobotController;
 import flee_and_catch.backend.component.IdentificationType;
-import flee_and_catch.backend.robot.RobotController;
-import flee_and_catch.backend.robot.ThreeWheelDrive;
 import flee_and_catch.backend.view.View;
 
 public class Interpreter {
@@ -86,32 +84,27 @@ public class Interpreter {
 		IdentificationType clienttype;
 		switch(type){
 			case SetType:
-				client.setType(command.getIdentification().getType());
-				client.setSubtype(command.getIdentification().getSubtype());
+				client.getIdentification().setType(command.getIdentification().getType());
 				clienttype = IdentificationType.valueOf(command.getIdentification().getType());			
 				switch(clienttype){
 				case App:
+					App app = new App();
+					client.setDevice(app);
 					//Add app
-					AppController.getApps().add(new App(command.getIdentification()));
+					//AppController.getApps().add(new App(command.getIdentification()));
 					View.setMobileDevice(AppController.getApps().size());
 					break;
 				case Robot:
 					//Add robot
-					RobotType robottype = RobotType.valueOf(command.getIdentification().getSubtype());
-					switch(robottype){
-						case ThreeWheelDrive:
-							RobotController.getRobots().add(new ThreeWheelDrive(command.getIdentification(), new Position(0, 0, 0), 0));	
-							break;
-					default:
-						break;
-					}
+					//RobotType robottype = RobotType.valueOf(command.getIdentification().getSubtype());
+					client.setDevice(command.getDevice());
+					RobotController.getRobots().add((Robot)command.getDevice());	
 					View.setRobots(RobotController.getRobots().size());
 					break;
 				}
-				System.out.println("Type of client: " + client.getId() + " set as " + client.getType().toString());
 				return;
 			case Disconnect:
-				Connection cmd = new Connection(CommandType.Connection.toString(), ConnectionType.Disconnect.toString(), command.getIdentification());
+				Connection cmd = new Connection(CommandType.Connection.toString(), ConnectionType.Disconnect.toString(), client.getIdentification(), command.getDevice());
 				
 				Server.sendCmd(client, cmd.getCommand());
 				clienttype = IdentificationType.valueOf(command.getIdentification().getType());
@@ -119,7 +112,7 @@ public class Interpreter {
 				case App:
 					//Remove app
 					for(int i=0; i<AppController.getApps().size(); i++){
-						if(AppController.getApps().get(i).getIdentification().getId() == client.getId()){
+						if(AppController.getApps().get(i).getClientIdentification().getId() == command.getIdentification().getId()){
 							AppController.getApps().remove(AppController.getApps().get(i));
 							break;
 						}
@@ -128,14 +121,13 @@ public class Interpreter {
 				case Robot:
 					//Remove robot
 					for(int i=0; i<RobotController.getRobots().size(); i++){
-						if(RobotController.getRobots().get(i).getIdentification().getId() == client.getId()){
+						if(RobotController.getRobots().get(i).getClientIdentification().getId() == command.getIdentification().getId()){
 							RobotController.getRobots().remove(RobotController.getRobots().get(i));
 							break;
 						}
 					}
 					break;
 				}
-				System.out.println("Client with id: " + client.getId() + ", type: " + client.getType().toString() + " and subtype: " + client.getSubtype() + " disconnected");
 				Server.removeClient(client);
 				return;
 			default:
@@ -155,11 +147,11 @@ public class Interpreter {
 	private void synchronisation(JSONObject pCommand) throws Exception{
 		if(pCommand == null) throw new NullPointerException();
 		SynchronizationType type = SynchronizationType.valueOf((String) pCommand.get("type"));
-		Synchronization command = gson.fromJson(pCommand.toString(), Synchronization.class);
+		//Synchronization command = gson.fromJson(pCommand.toString(), Synchronization.class);
 		
 		switch(type){
 			case GetRobots:
-				Synchronization cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), command.getIdentification(), RobotController.getRobots());
+				Synchronization cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), client.getIdentification(), RobotController.getRobots());
 				Server.sendCmd(client, cmd.getCommand());
 				return;
 			default:
@@ -184,20 +176,24 @@ public class Interpreter {
 		switch(type){
 			case Begin:
 				RobotController.changeActive(command.getRobot(), true);
-				Synchronization cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), command.getIdentification(), RobotController.getRobots());
-				Server.sendCmd(client, cmd.getCommand());
-				return;
+				Control cmdC = new Control(CommandType.Control.toString(), ControlType.Begin.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
+				Server.sendCmd(client, cmdC.getCommand());
+				break;
 			case End:
 				RobotController.changeActive(command.getRobot(), false);
-				Synchronization cmd1 = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), command.getIdentification(), RobotController.getRobots());
-				Server.sendCmd(client, cmd1.getCommand());
-				return;
+				Control cmdC1 = new Control(CommandType.Control.toString(), ControlType.End.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
+				Server.sendCmd(client, cmdC1.getCommand());
+				break;
 			case Start:
-				return;
+				break;
 			case Stop:
-				return;
+				break;
 			default:
 				throw new Exception("Argument out of range");
 		}
+		
+		Synchronization cmdS = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), client.getIdentification(), RobotController.getRobots());
+		Server.sendCmd(client, cmdS.getCommand());
+		return;
 	}
 }

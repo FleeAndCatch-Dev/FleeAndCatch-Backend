@@ -1,4 +1,4 @@
-package flee_and_catch.backend.app;
+package flee_and_catch.backend.device.app;
 
 import java.util.ArrayList;
 import java.util.List;

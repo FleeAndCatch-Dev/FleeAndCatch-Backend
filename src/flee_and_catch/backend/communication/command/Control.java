@@ -3,6 +3,9 @@ package flee_and_catch.backend.communication.command;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import flee_and_catch.backend.communication.identification.ClientIdentification;
+import flee_and_catch.backend.device.robot.Robot;
+
 public class Control extends Command {
 	private Robot robot;
 	private Steering steering;
@@ -16,7 +19,7 @@ public class Control extends Command {
 	 * 
 	 * @author ThunderSL94
 	 */
-	protected Control(String pId, String pType, Identification pIdentification, Robot pRobot, Steering pSteering) {
+	public Control(String pId, String pType, ClientIdentification pIdentification, Robot pRobot, Steering pSteering) {
 		super(pId, pType, pIdentification);
 		this.robot = pRobot;
 		this.steering = pSteering;

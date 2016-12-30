@@ -15,7 +15,8 @@ import org.json.JSONObject;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.Connection;
 import flee_and_catch.backend.communication.command.ConnectionType;
-import flee_and_catch.backend.communication.command.Identification;
+import flee_and_catch.backend.communication.identification.ClientIdentification;
+
 
 public final class Server {
 	private static boolean opened;
@@ -127,12 +128,12 @@ public final class Server {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		Connection command = new Connection(CommandType.Connection.toString(), ConnectionType.SetId.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
+		Connection command = new Connection(CommandType.Connection.toString(), ConnectionType.SetId.toString(), new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, ""), null);
 		sendCmd(outputStream, command.getCommand());
-		command = new Connection(CommandType.Connection.toString(), ConnectionType.GetType.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
+		command = new Connection(CommandType.Connection.toString(), ConnectionType.GetType.toString(), new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, ""), null);
 		sendCmd(outputStream, command.getCommand());
 		
-		Client client = new Client(true, pId, pSocket.getInetAddress().getHostAddress(), port, pSocket, bufferedReader, outputStream);
+		Client client = new Client(true, new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, ""), pSocket, bufferedReader, outputStream);
 		clients.add(client);
 		
 		System.out.println("New client added with id:" + String.valueOf(pId));
@@ -267,7 +268,7 @@ public final class Server {
 		
 		for(int j=0; j<tmpclients.size(); j++){
 			for(int i=0; i<tmpclients.size() - 1; i++){
-				if(tmpclients.get(i).getId() < tmpclients.get(i + 1).getId()){
+				if(tmpclients.get(i).getIdentification().getId() < tmpclients.get(i + 1).getIdentification().getId()){
 					continue;
 				}
 				sortclients.add(tmpclients.get(i));
@@ -279,7 +280,7 @@ public final class Server {
 			clients = sortclients;	
 		
 		for( int i=0; i<clients.size(); i++) {
-			if(clients.get(i).getId() == result)
+			if(clients.get(i).getIdentification().getId() == result)
 				result++;
 		}
 		

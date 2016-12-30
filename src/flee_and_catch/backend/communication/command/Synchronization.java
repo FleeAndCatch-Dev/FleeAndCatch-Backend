@@ -6,6 +6,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import flee_and_catch.backend.communication.identification.ClientIdentification;
+import flee_and_catch.backend.device.robot.Robot;
+
 public class Synchronization extends Command {
 	private ArrayList<Robot> robots;
 	
@@ -20,7 +23,7 @@ public class Synchronization extends Command {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Synchronization(String pId, String pType, Identification pIdentification, ArrayList<Robot> pRobots){
+	public Synchronization(String pId, String pType, ClientIdentification pIdentification, ArrayList<Robot> pRobots){
 		super(pId, pType, pIdentification);
 		this.robots = pRobots;
 	}
