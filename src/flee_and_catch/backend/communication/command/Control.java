@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Control extends Command {
+	private Robot robot;
 	private Steering steering;
 	/**
 	 * <h1>Constructor</h1>
@@ -15,8 +16,10 @@ public class Control extends Command {
 	 * 
 	 * @author ThunderSL94
 	 */
-	protected Control(String pId, String pType, Identification pIdentification) {
+	protected Control(String pId, String pType, Identification pIdentification, Robot pRobot, Steering pSteering) {
 		super(pId, pType, pIdentification);
+		this.robot = pRobot;
+		this.steering = pSteering;
 	}
 	
 	/**
@@ -39,4 +42,11 @@ public class Control extends Command {
 		return command.toString();
 	}
 
+	public Robot getRobot() {
+		return robot;
+	}
+
+	public Steering getSteering() {
+		return steering;
+	}
 }

@@ -13,6 +13,8 @@ import flee_and_catch.backend.communication.command.ConnectionType;
 import flee_and_catch.backend.communication.command.Position;
 import flee_and_catch.backend.communication.command.Synchronization;
 import flee_and_catch.backend.communication.command.SynchronizationType;
+import flee_and_catch.backend.communication.command.Control;
+import flee_and_catch.backend.communication.command.ControlType;
 import flee_and_catch.backend.component.RobotType;
 import flee_and_catch.backend.component.IdentificationType;
 import flee_and_catch.backend.robot.RobotController;
@@ -59,6 +61,9 @@ public class Interpreter {
 				return;
 			case Synchronisation:
 				synchronisation(jsonCommand);
+				return;
+			case Control:
+				control(jsonCommand);
 				return;
 			default:
 				throw new Exception("Argument out of range");
@@ -156,6 +161,40 @@ public class Interpreter {
 			case GetRobots:
 				Synchronization cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), command.getIdentification(), RobotController.getRobots());
 				Server.sendCmd(client, cmd.getCommand());
+				return;
+			default:
+				throw new Exception("Argument out of range");
+		}
+	}
+	
+	/**
+	 * <h1>Parse control</h1>
+	 * Parse of a synchronization command.
+	 * 
+	 * @param pCommand Command as json object.
+	 * @throws Exception
+	 * 
+	 * @author ThunderSL94
+	 */
+	private void control(JSONObject pCommand) throws Exception{
+		if(pCommand == null) throw new NullPointerException();
+		ControlType type = ControlType.valueOf((String) pCommand.get("type"));
+		Control command = gson.fromJson(pCommand.toString(), Control.class);
+		
+		switch(type){
+			case Begin:
+				RobotController.changeActive(command.getRobot(), true);
+				Synchronization cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), command.getIdentification(), RobotController.getRobots());
+				Server.sendCmd(client, cmd.getCommand());
+				return;
+			case End:
+				RobotController.changeActive(command.getRobot(), false);
+				Synchronization cmd1 = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), command.getIdentification(), RobotController.getRobots());
+				Server.sendCmd(client, cmd1.getCommand());
+				return;
+			case Start:
+				return;
+			case Stop:
 				return;
 			default:
 				throw new Exception("Argument out of range");

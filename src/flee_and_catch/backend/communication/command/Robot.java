@@ -5,11 +5,13 @@ import org.json.JSONObject;
 
 public class Robot {
 	private Identification identification;
+	private boolean active;
 	private Position position;
 	private double speed;
 	
 	public Robot(Identification pIdentification, Position pPosition, double pSpeed){
 		this.identification = pIdentification;
+		this.active = false;
 		this.position = pPosition;
 		this.speed = pSpeed;
 	}
@@ -26,6 +28,7 @@ public class Robot {
 	public JSONObject getJSONObject() throws JSONException{
 		JSONObject jsonRobot = new JSONObject();
 		jsonRobot.put("identification", identification.getJSONObject());
+		jsonRobot.put("active", active);
 		jsonRobot.put("position", position.getJSONObject());
 		jsonRobot.put("speed", speed);
 
@@ -34,6 +37,13 @@ public class Robot {
 	
 	public Identification getIdentification() {
 		return identification;
+	}
+	
+	public boolean isActive() {
+		return active;
+	}
+	public void setActive(boolean active) {
+		this.active = active;
 	}
 
 	public Position getPosition() {
