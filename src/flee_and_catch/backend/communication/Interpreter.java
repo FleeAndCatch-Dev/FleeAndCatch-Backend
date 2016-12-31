@@ -5,18 +5,19 @@ import org.json.JSONObject;
 import com.google.gson.Gson;
 import com.sun.org.apache.bcel.internal.util.Objects;
 
+import flee_and_catch.backend.communication.command.Command;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.Connection;
 import flee_and_catch.backend.communication.command.ConnectionType;
 import flee_and_catch.backend.communication.command.Synchronization;
 import flee_and_catch.backend.communication.command.SynchronizationType;
+import flee_and_catch.backend.communication.command.component.IdentificationType;
+import flee_and_catch.backend.communication.command.device.app.App;
+import flee_and_catch.backend.communication.command.device.app.AppController;
+import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.RobotController;
 import flee_and_catch.backend.communication.command.Control;
 import flee_and_catch.backend.communication.command.ControlType;
-import flee_and_catch.backend.device.app.App;
-import flee_and_catch.backend.device.app.AppController;
-import flee_and_catch.backend.device.robot.Robot;
-import flee_and_catch.backend.device.robot.RobotController;
-import flee_and_catch.backend.component.IdentificationType;
 import flee_and_catch.backend.view.View;
 
 public class Interpreter {
@@ -172,28 +173,31 @@ public class Interpreter {
 		if(pCommand == null) throw new NullPointerException();
 		ControlType type = ControlType.valueOf((String) pCommand.get("type"));
 		Control command = gson.fromJson(pCommand.toString(), Control.class);
+		Command cmd;
 		
 		switch(type){
 			case Begin:
 				RobotController.changeActive(command.getRobot(), true);
-				Control cmdC = new Control(CommandType.Control.toString(), ControlType.Begin.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
-				Server.sendCmd(client, cmdC.getCommand());
+				cmd = new Control(CommandType.Control.toString(), ControlType.Begin.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
+				Server.sendCmd(client, cmd.getCommand());
 				break;
 			case End:
 				RobotController.changeActive(command.getRobot(), false);
-				Control cmdC1 = new Control(CommandType.Control.toString(), ControlType.End.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
-				Server.sendCmd(client, cmdC1.getCommand());
+				cmd = new Control(CommandType.Control.toString(), ControlType.End.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
+				Server.sendCmd(client, cmd.getCommand());
 				break;
 			case Start:
 				break;
 			case Stop:
 				break;
+			case Control:
+				break;
 			default:
 				throw new Exception("Argument out of range");
 		}
 		
-		Synchronization cmdS = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), client.getIdentification(), RobotController.getRobots());
-		Server.sendCmd(client, cmdS.getCommand());
+		cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), client.getIdentification(), RobotController.getRobots());
+		Server.sendCmd(client, cmd.getCommand());
 		return;
 	}
 }

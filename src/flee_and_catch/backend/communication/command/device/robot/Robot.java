@@ -1,12 +1,11 @@
-package flee_and_catch.backend.device.robot;
+package flee_and_catch.backend.communication.command.device.robot;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import flee_and_catch.backend.communication.command.Position;
-import flee_and_catch.backend.communication.identification.ClientIdentification;
-import flee_and_catch.backend.communication.identification.RobotIdentification;
-import flee_and_catch.backend.device.Device;
+import flee_and_catch.backend.communication.command.device.Device;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.identification.RobotIdentification;
 
 public class Robot implements Device {
 	

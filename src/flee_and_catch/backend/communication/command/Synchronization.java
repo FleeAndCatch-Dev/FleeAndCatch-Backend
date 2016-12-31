@@ -6,8 +6,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import flee_and_catch.backend.communication.identification.ClientIdentification;
-import flee_and_catch.backend.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 public class Synchronization extends Command {
 	private ArrayList<Robot> robots;

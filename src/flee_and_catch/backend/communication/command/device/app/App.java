@@ -1,11 +1,11 @@
-package flee_and_catch.backend.device.app;
+package flee_and_catch.backend.communication.command.device.app;
 
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import flee_and_catch.backend.communication.identification.ClientIdentification;
-import flee_and_catch.backend.device.Device;
+import flee_and_catch.backend.communication.command.device.Device;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 public class App implements Device {
 	private ClientIdentification clientidentification;

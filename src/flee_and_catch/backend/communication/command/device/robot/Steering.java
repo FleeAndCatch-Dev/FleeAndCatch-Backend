@@ -1,10 +1,10 @@
-package flee_and_catch.backend.communication.command;
+package flee_and_catch.backend.communication.command.device.robot;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import flee_and_catch.backend.component.Direction;
-import flee_and_catch.backend.component.Speed;
+import flee_and_catch.backend.communication.command.component.Direction;
+import flee_and_catch.backend.communication.command.component.Speed;
 
 public class Steering {
 	private Direction direction;

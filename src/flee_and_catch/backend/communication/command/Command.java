@@ -2,7 +2,7 @@ package flee_and_catch.backend.communication.command;
 
 import org.json.JSONException;
 
-import flee_and_catch.backend.communication.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 public abstract class Command {
 	protected String id;

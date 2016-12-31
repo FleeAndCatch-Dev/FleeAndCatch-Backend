@@ -15,7 +15,7 @@ import org.json.JSONObject;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.Connection;
 import flee_and_catch.backend.communication.command.ConnectionType;
-import flee_and_catch.backend.communication.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 
 public final class Server {

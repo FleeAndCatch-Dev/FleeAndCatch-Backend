@@ -1,4 +1,4 @@
-package flee_and_catch.backend.device.robot;
+package flee_and_catch.backend.communication.command.device.robot;
 
 import java.util.ArrayList;
 

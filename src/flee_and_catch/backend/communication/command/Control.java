@@ -3,8 +3,9 @@ package flee_and_catch.backend.communication.command;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import flee_and_catch.backend.communication.identification.ClientIdentification;
-import flee_and_catch.backend.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Steering;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 public class Control extends Command {
 	private Robot robot;
@@ -34,13 +35,17 @@ public class Control extends Command {
 	 * @author ThunderSL94
 	 */
 	public String getCommand() throws JSONException{
+		JSONObject control = new JSONObject();
+		control.put("robot", robot.getJSONObject());
+		control.put("steering", steering.getJSONObject());
+		
 		JSONObject command = new JSONObject();
 		command.put("id", id);
 		command.put("type", type);
 		command.put("apiid", apiid);
 		command.put("errorhandling", errorhandling);
 		command.put("identification", identification.getJSONObject());
-		command.put("control", steering.getJSONObject());
+		command.put("control", control);
 		
 		return command.toString();
 	}

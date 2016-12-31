@@ -4,8 +4,8 @@ import java.io.BufferedReader;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import flee_and_catch.backend.communication.identification.ClientIdentification;
-import flee_and_catch.backend.device.Device;
+import flee_and_catch.backend.communication.command.device.Device;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 public class Client {
 

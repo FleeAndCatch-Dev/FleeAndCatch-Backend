@@ -1,4 +1,4 @@
-package flee_and_catch.backend.communication.command;
+package flee_and_catch.backend.communication.command.device.robot;
 
 import org.json.JSONException;
 import org.json.JSONObject;
