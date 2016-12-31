@@ -3,7 +3,7 @@ package flee_and_catch.backend.communication.command.identification;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class RobotIdentification {
+public class RobotIdentification implements Identification {
 	private String subtype;
 	private String roletype;
 	

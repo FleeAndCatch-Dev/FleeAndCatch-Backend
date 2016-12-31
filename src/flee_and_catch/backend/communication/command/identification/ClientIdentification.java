@@ -3,7 +3,7 @@ package flee_and_catch.backend.communication.command.identification;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ClientIdentification {
+public class ClientIdentification implements Identification {
 
 	private int id;
 	private String type;
@@ -26,6 +26,7 @@ public class ClientIdentification {
 	 * 
 	 * @author ThunderSL94
 	 */
+	@Override
 	public JSONObject getJSONObject() throws JSONException{
 		JSONObject jsonIdentification = new JSONObject();
 		jsonIdentification.put("id", id);
