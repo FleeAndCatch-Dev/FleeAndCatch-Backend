@@ -5,10 +5,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import flee_and_catch.backend.communication.command.device.Device;
-import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.identification.AppIdentification;
 
 public class App implements Device {
-	private ClientIdentification clientidentification;
+	private AppIdentification identification;
+	private boolean active;
 	//private Identification identification;
 	
 	/**
@@ -23,24 +24,20 @@ public class App implements Device {
 		//this.identification = pIdentification;
 	}
 
+	@Override
 	public JSONObject getJSONObject() throws JSONException {
-		JSONObject jsonRobot = new JSONObject();
-		/*jsonRobot.put("identification", identification.getJSONObject());
-		jsonRobot.put("identification", identification.getJSONObject());
-		jsonRobot.put("active", active);
-		jsonRobot.put("position", position.getJSONObject());
-		jsonRobot.put("speed", speed);*/
+		JSONObject jsonApp = new JSONObject();
+		jsonApp.put("identification", identification.getJSONObject());
+		jsonApp.put("active", active);
 
-		return jsonRobot;
+		return jsonApp;
 	}
 
-	public ClientIdentification getClientIdentification() {
-		return clientidentification;
-	}
-	
-	
-
-	/*public Identification getIdentification() {
+	public AppIdentification getIdentification() {
 		return identification;
-	}*/
+	}
+
+	public boolean getActive() {
+		return active;
+	}
 }

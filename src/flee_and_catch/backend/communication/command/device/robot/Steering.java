@@ -7,27 +7,27 @@ import flee_and_catch.backend.communication.command.component.Direction;
 import flee_and_catch.backend.communication.command.component.Speed;
 
 public class Steering {
-	private Direction direction;
-	private Speed speed;
+	private String direction;
+	private String speed;
 	
-	public Steering(int pDirection, int pSpeed){
-		this.direction = Direction.get(pDirection);
-		this.speed = Speed.get(pSpeed);	
+	public Steering(String pDirection, String pSpeed){
+		this.direction = Direction.valueOf(pDirection).toString();
+		this.speed = Speed.valueOf(pSpeed).toString();	
 	}
 	
 	public JSONObject getJSONObject() throws JSONException{
 		JSONObject jsonSteering = new JSONObject();
-		jsonSteering.put("direction", direction.getValue());
-		jsonSteering.put("speed", speed.getValue());
+		jsonSteering.put("direction", direction);
+		jsonSteering.put("speed", speed);
 		
 		return jsonSteering;
 	}
 
-	public Direction getDirection() {
+	public String getDirection() {
 		return direction;
 	}
 
-	public Speed getSpeed() {
+	public String getSpeed() {
 		return speed;
 	}
 }

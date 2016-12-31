@@ -3,9 +3,10 @@ package flee_and_catch.backend.communication.command.identification;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ClientIdentification implements Identification {
+import flee_and_catch.backend.communication.command.component.IdentificationType;
 
-	private int id;
+public class ClientIdentification extends Identification {
+
 	private String type;
 	private String address;
 	private int port;
@@ -14,7 +15,7 @@ public class ClientIdentification implements Identification {
 		this.id = pId;
 		this.address = pAddress;
 		this.port = pPort;
-		this.type = pType;
+		this.type = IdentificationType.valueOf(pType).toString();
 	}
 
 	/**
@@ -26,7 +27,6 @@ public class ClientIdentification implements Identification {
 	 * 
 	 * @author ThunderSL94
 	 */
-	@Override
 	public JSONObject getJSONObject() throws JSONException{
 		JSONObject jsonIdentification = new JSONObject();
 		jsonIdentification.put("id", id);
@@ -35,14 +35,6 @@ public class ClientIdentification implements Identification {
 		jsonIdentification.put("port", port);
 		
 		return jsonIdentification;
-	}
-	
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
 	}
 
 	public String getType() {

@@ -4,19 +4,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import flee_and_catch.backend.communication.command.device.Device;
-import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 import flee_and_catch.backend.communication.command.identification.RobotIdentification;
 
 public class Robot implements Device {
 	
-	private ClientIdentification clientidentification;
 	private RobotIdentification identification;
 	private boolean active;
 	private Position position;
 	private double speed;
 	
-	public Robot(ClientIdentification pClientIdentification, RobotIdentification pIdentification, Position pPosition, double pSpeed){
-		this.clientidentification = pClientIdentification;
+	public Robot(RobotIdentification pIdentification, Position pPosition, double pSpeed){
 		this.identification = pIdentification;
 		this.active = false;
 		this.position = pPosition;
@@ -32,19 +29,15 @@ public class Robot implements Device {
 	 * 
 	 * @author ThunderSL94
 	 */
+	@Override
 	public JSONObject getJSONObject() throws JSONException{
 		JSONObject jsonRobot = new JSONObject();
-		jsonRobot.put("clientidentification", clientidentification.getJSONObject());
 		jsonRobot.put("identification", identification.getJSONObject());
 		jsonRobot.put("active", active);
 		jsonRobot.put("position", position.getJSONObject());
 		jsonRobot.put("speed", speed);
 
 		return jsonRobot;
-	}
-
-	public ClientIdentification getClientIdentification() {
-		return clientidentification;
 	}
 
 	public RobotIdentification getIdentification() {

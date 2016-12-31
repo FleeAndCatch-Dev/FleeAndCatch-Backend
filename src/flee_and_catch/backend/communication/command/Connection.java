@@ -4,8 +4,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import flee_and_catch.backend.communication.command.device.Device;
-import flee_and_catch.backend.communication.command.device.app.App;
-import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 public class Connection extends Command {	
@@ -41,14 +39,7 @@ public class Connection extends Command {
 		command.put("apiid", apiid);
 		command.put("errorhandling", errorhandling);
 		command.put("identification", identification.getJSONObject());
-		
-		if(device.getClass() == Robot.class)
-			command.put("device", ((Robot)device).getJSONObject());
-		else
-			command.put("device", ((App)device));
-		
-		
-		
+		command.put("device", device.getJSONObject());		
 		
 		return command.toString();
 	}

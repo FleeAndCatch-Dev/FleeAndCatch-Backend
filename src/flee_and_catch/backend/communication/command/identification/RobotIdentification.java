@@ -3,13 +3,17 @@ package flee_and_catch.backend.communication.command.identification;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class RobotIdentification implements Identification {
+import flee_and_catch.backend.communication.command.component.RobotType;
+import flee_and_catch.backend.communication.command.component.RoleType;
+
+public class RobotIdentification extends Identification {
 	private String subtype;
 	private String roletype;
 	
-	public RobotIdentification(String pSubtype, String pRoletype){
-		this.subtype = pSubtype;
-		this.roletype = pRoletype;
+	public RobotIdentification(int pId, String pSubtype, String pRoletype){
+		this.id = pId;
+		this.subtype = RobotType.valueOf(pSubtype).toString();
+		this.roletype = RoleType.valueOf(pRoletype).toString();
 	}
 	
 	/**
@@ -23,6 +27,7 @@ public class RobotIdentification implements Identification {
 	 */
 	public JSONObject getJSONObject() throws JSONException{
 		JSONObject jsonIdentification = new JSONObject();
+		jsonIdentification.put("id", id);
 		jsonIdentification.put("subtype", subtype);
 		jsonIdentification.put("role", roletype);
 		

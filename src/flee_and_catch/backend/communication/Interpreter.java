@@ -13,9 +13,9 @@ import flee_and_catch.backend.communication.command.Synchronization;
 import flee_and_catch.backend.communication.command.SynchronizationType;
 import flee_and_catch.backend.communication.command.component.IdentificationType;
 import flee_and_catch.backend.communication.command.device.app.App;
-import flee_and_catch.backend.communication.command.device.app.AppController;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
-import flee_and_catch.backend.communication.command.device.robot.RobotController;
+import flee_and_catch.backend.controller.AppController;
+import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.communication.command.Control;
 import flee_and_catch.backend.communication.command.ControlType;
 import flee_and_catch.backend.view.View;
@@ -113,7 +113,7 @@ public class Interpreter {
 				case App:
 					//Remove app
 					for(int i=0; i<AppController.getApps().size(); i++){
-						if(AppController.getApps().get(i).getClientIdentification().getId() == command.getIdentification().getId()){
+						if(AppController.getApps().get(i).getIdentification().getId() == command.getIdentification().getId()){
 							AppController.getApps().remove(AppController.getApps().get(i));
 							break;
 						}
@@ -122,7 +122,7 @@ public class Interpreter {
 				case Robot:
 					//Remove robot
 					for(int i=0; i<RobotController.getRobots().size(); i++){
-						if(RobotController.getRobots().get(i).getClientIdentification().getId() == command.getIdentification().getId()){
+						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getIdentification().getId()){
 							RobotController.getRobots().remove(RobotController.getRobots().get(i));
 							break;
 						}
