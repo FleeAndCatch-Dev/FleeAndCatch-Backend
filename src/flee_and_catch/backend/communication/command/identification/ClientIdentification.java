@@ -7,7 +7,6 @@ import flee_and_catch.backend.communication.command.component.IdentificationType
 
 public class ClientIdentification extends Identification {
 
-	private String type;
 	private String address;
 	private int port;
 	
@@ -35,14 +34,6 @@ public class ClientIdentification extends Identification {
 		jsonIdentification.put("port", port);
 		
 		return jsonIdentification;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	public String getAddress() {

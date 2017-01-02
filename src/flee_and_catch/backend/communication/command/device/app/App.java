@@ -20,8 +20,9 @@ public class App implements Device {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public App(){
-		//this.identification = pIdentification;
+	public App(AppIdentification pIdentification){
+		this.identification = pIdentification;
+		this.active = false;
 	}
 
 	@Override

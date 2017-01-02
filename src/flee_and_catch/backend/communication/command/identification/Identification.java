@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 public abstract class Identification {
 	protected int id;
+	protected String type;
 	
 	public abstract JSONObject getJSONObject() throws JSONException;
 
@@ -14,5 +15,13 @@ public abstract class Identification {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 }

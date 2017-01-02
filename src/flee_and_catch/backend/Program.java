@@ -17,7 +17,7 @@ public class Program {
 	public static void main(String[] args) {
 		try {
 			Server.open();
-			//RobotController.getRobots().add(new ThreeWheelDrive(new Identification(Server.generateNewClientId(), "192.168.1.2", 5000, IdentificationType.Robot.toString(), RobotType.ThreeWheelDrive.toString()), new Position(0, 0, 0), 0));
+			//RobotController.getRobots().add(new ThreeWheelDrive(new RobotIdentification(0, RobotType.ThreeWheelDrive.toString(), RoleType.Undefined.toString()), new Position(0, 0, 0), 0));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

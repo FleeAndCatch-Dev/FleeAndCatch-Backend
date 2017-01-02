@@ -50,6 +50,10 @@ public class Client {
 		return identification;
 	}
 
+	public void setIdentification(ClientIdentification identification) {
+		this.identification = identification;
+	}
+
 	public boolean isConnected() {
 		return connected;
 	}	

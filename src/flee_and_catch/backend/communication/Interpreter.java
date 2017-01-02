@@ -3,6 +3,7 @@ package flee_and_catch.backend.communication;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.org.apache.bcel.internal.util.Objects;
 
 import flee_and_catch.backend.communication.command.Command;
@@ -12,13 +13,14 @@ import flee_and_catch.backend.communication.command.ConnectionType;
 import flee_and_catch.backend.communication.command.Synchronization;
 import flee_and_catch.backend.communication.command.SynchronizationType;
 import flee_and_catch.backend.communication.command.component.IdentificationType;
+import flee_and_catch.backend.communication.command.device.Device;
+import flee_and_catch.backend.communication.command.device.DeviceAdapter;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.communication.command.Control;
 import flee_and_catch.backend.communication.command.ControlType;
-import flee_and_catch.backend.view.View;
 
 public class Interpreter {
 
@@ -81,28 +83,42 @@ public class Interpreter {
 	private void connection(JSONObject pCommand) throws Exception {
 		if(pCommand == null) throw new NullPointerException();
 		ConnectionType type = ConnectionType.valueOf((String) pCommand.get("type"));
-		Connection command = gson.fromJson(pCommand.toString(), Connection.class);
+		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(Device.class, new DeviceAdapter());
+		builder.setPrettyPrinting();
+		Gson localgson = builder.create();
+		
+		
+		//.registerTypeAdapter(Device.class, new InterfaceAdapter<Device>());//.create();
+		//interface adapter
+		
+		
+		Connection command = localgson.fromJson(pCommand.toString(), Connection.class);
 		IdentificationType clienttype;
 		switch(type){
-			case SetType:
-				client.getIdentification().setType(command.getIdentification().getType());
-				clienttype = IdentificationType.valueOf(command.getIdentification().getType());			
-				switch(clienttype){
+			case Connect:
+				switch (IdentificationType.valueOf(command.getIdentification().getType())) {
 				case App:
-					App app = new App();
+					App app = (App)command.getDevice();
+					app.getIdentification().setId(client.getIdentification().getId());
+					command.getIdentification().setId(client.getIdentification().getId());
+					client.setIdentification(command.getIdentification());
 					client.setDevice(app);
-					//Add app
-					//AppController.getApps().add(new App(command.getIdentification()));
-					View.setMobileDevice(AppController.getApps().size());
+					AppController.getApps().add(app);
 					break;
 				case Robot:
-					//Add robot
-					//RobotType robottype = RobotType.valueOf(command.getIdentification().getSubtype());
-					client.setDevice(command.getDevice());
-					RobotController.getRobots().add((Robot)command.getDevice());	
-					View.setRobots(RobotController.getRobots().size());
+					Robot robot = (Robot)command.getDevice();
+					robot.getIdentification().setId(client.getIdentification().getId());
+					command.getIdentification().setId(client.getIdentification().getId());
+					client.setIdentification(command.getIdentification());
+					client.setDevice(robot);
+					RobotController.getRobots().add(robot);
 					break;
-				}
+				default:
+					throw new Exception("Undefined connection");
+				}	
+				command = new Connection(CommandType.Connection.toString(), ConnectionType.Connect.toString(), client.getIdentification(), client.getDevice());
+				Server.sendCmd(client, command.getCommand());
 				return;
 			case Disconnect:
 				Connection cmd = new Connection(CommandType.Connection.toString(), ConnectionType.Disconnect.toString(), client.getIdentification(), command.getDevice());
@@ -128,6 +144,8 @@ public class Interpreter {
 						}
 					}
 					break;
+				default:
+					throw new Exception("Undefined disconnection");
 				}
 				Server.removeClient(client);
 				return;

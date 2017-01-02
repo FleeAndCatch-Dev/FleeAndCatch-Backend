@@ -11,10 +11,7 @@ import java.util.ArrayList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import flee_and_catch.backend.communication.command.CommandType;
-import flee_and_catch.backend.communication.command.Connection;
-import flee_and_catch.backend.communication.command.ConnectionType;
+import flee_and_catch.backend.communication.command.component.IdentificationType;
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 
@@ -128,15 +125,19 @@ public final class Server {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		Connection command = new Connection(CommandType.Connection.toString(), ConnectionType.SetId.toString(), new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, ""), null);
-		sendCmd(outputStream, command.getCommand());
-		command = new Connection(CommandType.Connection.toString(), ConnectionType.GetType.toString(), new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, ""), null);
-		sendCmd(outputStream, command.getCommand());
-		
-		Client client = new Client(true, new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, ""), pSocket, bufferedReader, outputStream);
+		Client client = new Client(true, new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
 		clients.add(client);
 		
-		System.out.println("New client added with id:" + String.valueOf(pId));
+		//client.getInterpreter().parse(receiveCmd(bufferedReader));
+		
+		/*Connection command = new Connection(CommandType.Connection.toString(), ConnectionType.SetId.toString(), new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), null);
+		sendCmd(outputStream, command.getCommand());
+		command = new Connection(CommandType.Connection.toString(), ConnectionType.GetType.toString(), new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), null);
+		sendCmd(outputStream, command.getCommand());*/
+		
+		
+		
+		//System.out.println("New client added with id:" + String.valueOf(pId));
 		
 		while(client.isConnected()){
 			client.getInterpreter().parse(receiveCmd(client));
