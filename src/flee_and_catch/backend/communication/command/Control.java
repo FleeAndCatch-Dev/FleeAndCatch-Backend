@@ -35,9 +35,6 @@ public class Control extends Command {
 	 * @author ThunderSL94
 	 */
 	public String getCommand() throws JSONException{
-		JSONObject control = new JSONObject();
-		control.put("robot", robot.getJSONObject());
-		control.put("steering", steering.getJSONObject());
 		
 		JSONObject command = new JSONObject();
 		command.put("id", id);
@@ -45,7 +42,8 @@ public class Control extends Command {
 		command.put("apiid", apiid);
 		command.put("errorhandling", errorhandling);
 		command.put("identification", identification.getJSONObject());
-		command.put("control", control);
+		command.put("robot", robot.getJSONObject());
+		command.put("steering", steering.getJSONObject());
 		
 		return command.toString();
 	}

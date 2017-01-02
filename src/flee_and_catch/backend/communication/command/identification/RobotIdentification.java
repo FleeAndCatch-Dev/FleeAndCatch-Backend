@@ -18,6 +18,13 @@ public class RobotIdentification extends Identification {
 		this.roletype = RoleType.valueOf(pRoletype).toString();
 	}
 	
+	public RobotIdentification(int pId, String pType, String pSubtype, String pRoletype){
+		this.id = pId;
+		this.type = IdentificationType.valueOf(pType).toString();
+		this.subtype = RobotType.valueOf(pSubtype).toString();
+		this.roletype = RoleType.valueOf(pRoletype).toString();
+	}
+	
 	/**
 	 * <h1>Get identification</h1>
 	 * Get identification as json object.
@@ -32,7 +39,7 @@ public class RobotIdentification extends Identification {
 		jsonIdentification.put("id", id);
 		jsonIdentification.put("type", type);
 		jsonIdentification.put("subtype", subtype);
-		jsonIdentification.put("role", roletype);
+		jsonIdentification.put("roletype", roletype);
 		
 		return jsonIdentification;
 	}

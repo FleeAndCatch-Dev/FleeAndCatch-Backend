@@ -16,12 +16,18 @@ public class AppIdentification extends Identification {
 		this.roletype = RoleType.valueOf(pRoleType).toString();
 	}
 	
+	public AppIdentification(int pId, String pType, String pRoleType) {
+		this.id = pId;
+		this.type = IdentificationType.valueOf(pType).toString();
+		this.roletype = RoleType.valueOf(pRoleType).toString();
+	}
+	
 	@Override
 	public JSONObject getJSONObject() throws JSONException {
 		JSONObject jsonIdentification = new JSONObject();
 		jsonIdentification.put("id", id);
 		jsonIdentification.put("type", type);
-		jsonIdentification.put("role", roletype);
+		jsonIdentification.put("roletype", roletype);
 		
 		return jsonIdentification;
 	}

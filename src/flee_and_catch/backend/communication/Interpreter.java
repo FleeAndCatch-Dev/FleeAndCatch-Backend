@@ -60,8 +60,8 @@ public class Interpreter {
 			case Connection:
 				connection(jsonCommand);
 				return;
-			case Synchronisation:
-				synchronisation(jsonCommand);
+			case Synchronization:
+				synchronization(jsonCommand);
 				return;
 			case Control:
 				control(jsonCommand);
@@ -163,14 +163,14 @@ public class Interpreter {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private void synchronisation(JSONObject pCommand) throws Exception{
+	private void synchronization(JSONObject pCommand) throws Exception{
 		if(pCommand == null) throw new NullPointerException();
 		SynchronizationType type = SynchronizationType.valueOf((String) pCommand.get("type"));
 		//Synchronization command = gson.fromJson(pCommand.toString(), Synchronization.class);
 		
 		switch(type){
-			case GetRobots:
-				Synchronization cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), client.getIdentification(), RobotController.getRobots());
+			case Robots:
+				Synchronization cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
 				Server.sendCmd(client, cmd.getCommand());
 				return;
 			default:
@@ -193,16 +193,24 @@ public class Interpreter {
 		Control command = gson.fromJson(pCommand.toString(), Control.class);
 		Command cmd;
 		
+		Client localclient = null;
+		for(int i=0;i<Server.getClients().size();i++){
+			if(command.getRobot().getIdentification().getId() == Server.getClients().get(i).getIdentification().getId()){
+				localclient = Server.getClients().get(i);
+				break;
+			}
+		}
+		
 		switch(type){
 			case Begin:
 				RobotController.changeActive(command.getRobot(), true);
 				cmd = new Control(CommandType.Control.toString(), ControlType.Begin.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
-				Server.sendCmd(client, cmd.getCommand());
+				Server.sendCmd(localclient, cmd.getCommand());
 				break;
 			case End:
 				RobotController.changeActive(command.getRobot(), false);
 				cmd = new Control(CommandType.Control.toString(), ControlType.End.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
-				Server.sendCmd(client, cmd.getCommand());
+				Server.sendCmd(localclient, cmd.getCommand());
 				break;
 			case Start:
 				break;
@@ -214,7 +222,7 @@ public class Interpreter {
 				throw new Exception("Argument out of range");
 		}
 		
-		cmd = new Synchronization(CommandType.Synchronisation.toString(), SynchronizationType.SetRobots.toString(), client.getIdentification(), RobotController.getRobots());
+		cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
 		Server.sendCmd(client, cmd.getCommand());
 		return;
 	}

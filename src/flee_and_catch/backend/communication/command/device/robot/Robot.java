@@ -19,6 +19,13 @@ public class Robot implements Device {
 		this.position = pPosition;
 		this.speed = pSpeed;
 	}
+	
+	public Robot(RobotIdentification pIdentification, boolean pActive, Position pPosition, double pSpeed){
+		this.identification = pIdentification;
+		this.active = pActive;
+		this.position = pPosition;
+		this.speed = pSpeed;
+	}
 
 	/**
 	 * <h1>Get robot</h1>
