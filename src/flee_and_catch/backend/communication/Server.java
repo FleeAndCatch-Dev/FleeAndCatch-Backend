@@ -128,17 +128,6 @@ public final class Server {
 		Client client = new Client(true, new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
 		clients.add(client);
 		
-		//client.getInterpreter().parse(receiveCmd(bufferedReader));
-		
-		/*Connection command = new Connection(CommandType.Connection.toString(), ConnectionType.SetId.toString(), new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), null);
-		sendCmd(outputStream, command.getCommand());
-		command = new Connection(CommandType.Connection.toString(), ConnectionType.GetType.toString(), new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), null);
-		sendCmd(outputStream, command.getCommand());*/
-		
-		
-		
-		//System.out.println("New client added with id:" + String.valueOf(pId));
-		
 		while(client.isConnected()){
 			client.getInterpreter().parse(receiveCmd(client));
 		}

@@ -86,12 +86,7 @@ public class Interpreter {
 		GsonBuilder builder = new GsonBuilder();
 		builder.registerTypeAdapter(Device.class, new DeviceAdapter());
 		builder.setPrettyPrinting();
-		Gson localgson = builder.create();
-		
-		
-		//.registerTypeAdapter(Device.class, new InterfaceAdapter<Device>());//.create();
-		//interface adapter
-		
+		Gson localgson = builder.create();		
 		
 		Connection command = localgson.fromJson(pCommand.toString(), Connection.class);
 		IdentificationType clienttype;
@@ -166,12 +161,21 @@ public class Interpreter {
 	private void synchronization(JSONObject pCommand) throws Exception{
 		if(pCommand == null) throw new NullPointerException();
 		SynchronizationType type = SynchronizationType.valueOf((String) pCommand.get("type"));
-		//Synchronization command = gson.fromJson(pCommand.toString(), Synchronization.class);
+		Synchronization command = gson.fromJson(pCommand.toString(), Synchronization.class);
 		
 		switch(type){
 			case Robots:
-				Synchronization cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
-				Server.sendCmd(client, cmd.getCommand());
+				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
+					Synchronization cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
+					Server.sendCmd(client, cmd.getCommand());
+				}
+				else if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot) {
+					for (int i = 0; i < RobotController.getRobots().size(); i++) {
+						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId()){
+							RobotController.getRobots().set(i, command.getRobots().get(0));
+						}
+					}
+				}
 				return;
 			default:
 				throw new Exception("Argument out of range");
@@ -213,8 +217,12 @@ public class Interpreter {
 				Server.sendCmd(localclient, cmd.getCommand());
 				break;
 			case Start:
+				cmd = new Control(CommandType.Control.toString(), ControlType.Start.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
+				Server.sendCmd(localclient, cmd.getCommand());
 				break;
 			case Stop:
+				cmd = new Control(CommandType.Control.toString(), ControlType.Stop.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
+				Server.sendCmd(localclient, cmd.getCommand());
 				break;
 			case Control:
 				cmd = new Control(CommandType.Control.toString(), ControlType.Control.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
@@ -224,8 +232,8 @@ public class Interpreter {
 				throw new Exception("Argument out of range");
 		}
 		
-		//cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
-		//Server.sendCmd(client, cmd.getCommand());
+		cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
+		Server.sendCmd(client, cmd.getCommand());
 		return;
 	}
 }
