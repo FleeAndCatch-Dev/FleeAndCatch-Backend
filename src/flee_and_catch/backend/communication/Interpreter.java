@@ -217,13 +217,15 @@ public class Interpreter {
 			case Stop:
 				break;
 			case Control:
+				cmd = new Control(CommandType.Control.toString(), ControlType.Control.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
+				Server.sendCmd(localclient, cmd.getCommand());
 				break;
 			default:
 				throw new Exception("Argument out of range");
 		}
 		
-		cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
-		Server.sendCmd(client, cmd.getCommand());
+		//cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
+		//Server.sendCmd(client, cmd.getCommand());
 		return;
 	}
 }
