@@ -1,5 +1,8 @@
 package flee_and_catch.backend.communication;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
@@ -164,16 +167,30 @@ public class Interpreter {
 		Synchronization command = gson.fromJson(pCommand.toString(), Synchronization.class);
 		
 		switch(type){
-			case Robots:
+			case All:
 				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
-					Synchronization cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
+					Synchronization cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.All.toString(), client.getIdentification(), RobotController.getRobots());
+					Server.sendCmd(client, cmd.getCommand());
+				}
+				else
+					throw new Exception("Not implemented");
+				return;
+			case Current:
+				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
+					ArrayList<Robot> robotlist = new ArrayList<Robot>();
+					for(int i=0;i<RobotController.getRobots().size();i++){
+						for(int j=0;j<command.getRobots().size();j++){
+							if(RobotController.getRobots().get(i).getIdentification() == command.getRobots().get(j).getIdentification())
+								robotlist.add(RobotController.getRobots().get(i));
+						}
+					}
+					Synchronization cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.All.toString(), client.getIdentification(), robotlist);
 					Server.sendCmd(client, cmd.getCommand());
 				}
 				else if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot) {
 					for (int i = 0; i < RobotController.getRobots().size(); i++) {
-						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId()){
+						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId())
 							RobotController.getRobots().set(i, command.getRobots().get(0));
-						}
 					}
 				}
 				return;
@@ -210,30 +227,26 @@ public class Interpreter {
 				RobotController.changeActive(command.getRobot(), true);
 				cmd = new Control(CommandType.Control.toString(), ControlType.Begin.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
 				Server.sendCmd(localclient, cmd.getCommand());
-				break;
+				return;
 			case End:
 				RobotController.changeActive(command.getRobot(), false);
 				cmd = new Control(CommandType.Control.toString(), ControlType.End.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
 				Server.sendCmd(localclient, cmd.getCommand());
-				break;
+				return;
 			case Start:
 				cmd = new Control(CommandType.Control.toString(), ControlType.Start.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
 				Server.sendCmd(localclient, cmd.getCommand());
-				break;
+				return;
 			case Stop:
 				cmd = new Control(CommandType.Control.toString(), ControlType.Stop.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
 				Server.sendCmd(localclient, cmd.getCommand());
-				break;
+				return;
 			case Control:
 				cmd = new Control(CommandType.Control.toString(), ControlType.Control.toString(), client.getIdentification(), command.getRobot(), command.getSteering());
 				Server.sendCmd(localclient, cmd.getCommand());
-				break;
+				return;
 			default:
 				throw new Exception("Argument out of range");
 		}
-		
-		cmd = new Synchronization(CommandType.Synchronization.toString(), SynchronizationType.Robots.toString(), client.getIdentification(), RobotController.getRobots());
-		Server.sendCmd(client, cmd.getCommand());
-		return;
 	}
 }

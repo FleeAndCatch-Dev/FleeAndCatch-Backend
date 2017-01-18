@@ -94,14 +94,19 @@ public final class Server {
 		while(opened){
 			System.out.println("Wait for clients ...");
 			final Socket socket = serverSocket.accept();
+			final int id = generateNewClientId();
 			Thread clientThread = new Thread(new Runnable() {
 				
 				@Override
 				public void run() {
 					try {
-						newClient(socket, generateNewClientId());
+						newClient(socket, id);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
+						
+						//Device is current logging out unhandled TODO !!!!!!!!
+						
+						
 						e.printStackTrace();
 					}
 				}
