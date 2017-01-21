@@ -29,6 +29,11 @@ public class App implements Device {
 		this.identification = pIdentification;
 		this.active = pActive;
 	}
+	
+	public App(App pApp){
+		this.identification = pApp.getIdentification();
+		this.active = pApp.getActive();
+	}
 
 	@Override
 	public JSONObject getJSONObject() throws JSONException {

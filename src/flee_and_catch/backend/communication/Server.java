@@ -9,11 +9,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.ExceptionCommand;
@@ -33,6 +33,7 @@ public final class Server {
 	private static int port;
 	private static ServerSocket serverSocket;
 	private static ArrayList<Client> clients = new ArrayList<Client>();
+	private static Lock clientsLock = new ReentrantLock();
 	
 	/**
 	 * <h1>Open server</h1>
@@ -150,7 +151,9 @@ public final class Server {
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
 		Client client = new Client(true, new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
-		clients.add(client);
+		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
+		clientList.add(client);
+		setClients(clientList);
 		
 		while(client.isConnected()){
 			client.getInterpreter().parse(receiveCmd(client));
@@ -264,7 +267,10 @@ public final class Server {
 		pClient.getOutputStream().close();
 		pClient.setConnected(false);		
 		pClient.getSocket().close();
-		clients.remove(pClient);
+		
+		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
+		clientList.remove(pClient);
+		setClients(clientList);
 	}
 
 	/**
@@ -277,7 +283,7 @@ public final class Server {
 	 */
 	public static int generateNewClientId() {
 		int result = 0;
-		ArrayList<Client> tmpclients = clients;
+		ArrayList<Client> tmpclients = getClients();
 		ArrayList<Client> sortclients = new ArrayList<Client>();
 		
 		for(int j=0; j<tmpclients.size(); j++){
@@ -291,10 +297,10 @@ public final class Server {
 		}
 		
 		if(sortclients.size() > 0)
-			clients = sortclients;	
+			setClients(sortclients);
 		
-		for( int i=0; i<clients.size(); i++) {
-			if(clients.get(i).getIdentification().getId() == result)
+		for( int i=0; i<getClients().size(); i++) {
+			if(getClients().get(i).getIdentification().getId() == result)
 				result++;
 		}
 		
@@ -317,12 +323,13 @@ public final class Server {
 		return new JSONObject(pCommand);
 	}
 
+	//Handels the exception, when a device is unhandled disconnecting from the backend
 	private static void handleException(int pId, Exception e) throws IOException, JSONException{
 		//Get the client of the id
 		Client client = null;
-		for(int i=0; i<clients.size(); i++){
-			if(pId == clients.get(i).getIdentification().getId()){
-				client = clients.get(i);
+		for(int i=0; i<getClients().size(); i++){
+			if(pId == getClients().get(i).getIdentification().getId()){
+				client = getClients().get(i);
 				break;
 			}
 		}
@@ -360,37 +367,38 @@ public final class Server {
 				//The device is in a szenario
 				ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), e.getMessage(), client.getDevice()));
 				for(int i=0; i<szenario.getApps().size(); i++){
-					if(szenario.getApps().get(i).getIdentification().getId() != client.getIdentification().getId()){
-						szenario.getApps().get(i).setActive(false);
-						for(int j=0; j<clients.size(); j++){
-							if(clients.get(j).getIdentification().getId() == szenario.getApps().get(i).getIdentification().getId()){
-								Server.sendCmd(clients.get(j), cmd.getCommand());
+						for(int j=0; j<getClients().size(); j++){
+							if(getClients().get(j).getIdentification().getId() == szenario.getApps().get(i).getIdentification().getId()){
+								Server.sendCmd(getClients().get(j), cmd.getCommand());
 							}
 						}
-					}
 				}
 				for(int i=0; i<szenario.getRobots().size(); i++){
-					if(szenario.getRobots().get(i).getIdentification().getId() != client.getIdentification().getId()){
-						szenario.getRobots().get(i).setActive(false);
-						for(int j=0; j<clients.size(); j++){
-							if(clients.get(j).getIdentification().getId() == szenario.getRobots().get(i).getIdentification().getId()){
-								Server.sendCmd(clients.get(j), cmd.getCommand());
+						for(int j=0; j<getClients().size(); j++){
+							if(getClients().get(j).getIdentification().getId() == szenario.getRobots().get(i).getIdentification().getId()){
+								Server.sendCmd(getClients().get(j), cmd.getCommand());
 							}
 						}
-					}
 				}
-				SzenarioController.getSzenarios().remove(szenario);
+				//Remove from szenariolist
+				ArrayList<Szenario> szenarioList = new ArrayList<Szenario>(SzenarioController.getSzenarios());
+				szenarioList.remove(szenario);
+				SzenarioController.setSzenarios(szenarioList);
 			}
 			
 			//Remove device from controller
 			switch (type) {
 				case App:
 					App app = (App)client.getDevice();
-					AppController.getApps().remove(app);
+					ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
+					appList.remove(app);
+					AppController.setApps(appList);
 					break;
 				case Robot:
 					Robot robot = (Robot)client.getDevice();
-					RobotController.getRobots().remove(robot);
+					ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
+					robotList.remove(robot);
+					RobotController.setRobots(robotList);
 					break;
 				default:
 					break;
@@ -400,85 +408,21 @@ public final class Server {
 		}
 	}
 	
-	
-	
-	/*Client client = null;
-	for(int i=0; i<clients.size(); i++){
-		if(id == clients.get(i).getIdentification().getId()){
-			client = clients.get(i);
-			break;
-		}
-	}
-	
-	if(client != null){
-		ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), e.getMessage(), client.getDevice()));
-		IdentificationType type = IdentificationType.valueOf(client.getIdentification().getType());
-		for(int i=0; i<SzenarioController.getSzenarios().size(); i++){
-			switch (type) {
-				case App:
-					App app = (App)client.getDevice();
-					for(int j=0; j<SzenarioController.getSzenarios().get(i).getApps().size(); j++){
-						if(app.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getApps().get(j).getIdentification().getId()){
-							Szenario currentSzenario = SzenarioController.getSzenarios().get(i);
-							for(int x=0; x<currentSzenario.getRobots().size(); x++){
-								for(int y=0; y<clients.size(); y++){
-									IdentificationType deviceType = IdentificationType.valueOf(clients.get(y).getIdentification().getType());
-									if(deviceType == IdentificationType.Robot){
-										Robot currentRobot = (Robot)clients.get(y).getDevice();
-										if(currentRobot.getIdentification().getId() == currentSzenario.getRobots().get(x).getIdentification().getId()){
-											currentSzenario.getRobots().get(x).setActive(false);
-											try {
-												Server.sendCmd(clients.get(y), cmd.getCommand());
-											} catch (IOException | JSONException e1) {
-												// TODO Auto-generated catch block
-												e1.printStackTrace();
-											}
-										}
-									}
-								}
-							}											
-							for(int x=0; x<currentSzenario.getApps().size(); x++){
-								for(int y=0; y<clients.size(); y++){
-									IdentificationType deviceType = IdentificationType.valueOf(clients.get(y).getIdentification().getType());
-									if(deviceType == IdentificationType.App){
-										App currentApp = (App)clients.get(y).getDevice();
-										if(currentApp != app){
-											if(currentApp.getIdentification().getId() == currentSzenario.getRobots().get(x).getIdentification().getId()){
-												currentSzenario.getApps().get(x).setActive(false);
-												try {
-													Server.sendCmd(clients.get(y), cmd.getCommand());
-												} catch (IOException | JSONException e1) {
-													// TODO Auto-generated catch block
-													e1.printStackTrace();
-												}
-											}
-										}
-										else {
-											currentApp.setActive(false);
-										}	
-									}													
-								}
-							}
-							SzenarioController.getSzenarios().remove(currentSzenario);
-						}
-					}
-					break;
-				case Robot:
-					for(int j=0; j<SzenarioController.getSzenarios().get(i).getRobots().size(); j++){
-						
-					}
-					break;
-				default:
-					break;
-			}
-		}
-	}*/
-	
 	public static boolean isOpened() {
 		return opened;
 	}
 
 	public static ArrayList<Client> getClients() {
-		return clients;
+		clientsLock.lock();
+		ArrayList<Client> clientList = new ArrayList<Client>(clients);
+		clientsLock.unlock();
+		
+		return clientList;
+	}
+
+	public static void setClients(ArrayList<Client> clients) {
+		clientsLock.lock();
+		Server.clients = clients;
+		clientsLock.unlock();
 	}
 }

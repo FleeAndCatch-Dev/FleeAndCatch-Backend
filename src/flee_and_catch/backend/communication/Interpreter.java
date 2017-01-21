@@ -8,7 +8,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.org.apache.bcel.internal.util.Objects;
 
-import flee_and_catch.backend.communication.command.Command;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.ConnectionCommand;
 import flee_and_catch.backend.communication.command.ConnectionCommandType;
@@ -108,7 +107,9 @@ public class Interpreter {
 					command.getIdentification().setId(client.getIdentification().getId());
 					client.setIdentification(command.getIdentification());
 					client.setDevice(app);
-					AppController.getApps().add(app);
+					ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
+					appList.add(app);
+					AppController.setApps(appList);
 					break;
 				case Robot:
 					Robot robot = (Robot)command.getDevice();
@@ -116,7 +117,9 @@ public class Interpreter {
 					command.getIdentification().setId(client.getIdentification().getId());
 					client.setIdentification(command.getIdentification());
 					client.setDevice(robot);
-					RobotController.getRobots().add(robot);
+					ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
+					robotList.add(robot);
+					RobotController.setRobots(robotList);
 					break;
 				default:
 					throw new Exception("Undefined connection");
@@ -134,7 +137,10 @@ public class Interpreter {
 					//Remove app
 					for(int i=0; i<AppController.getApps().size(); i++){
 						if(AppController.getApps().get(i).getIdentification().getId() == command.getIdentification().getId()){
-							AppController.getApps().remove(AppController.getApps().get(i));
+							App app = new App(AppController.getApps().get(i));
+							ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
+							appList.remove(app);
+							AppController.setApps(appList);
 							break;
 						}
 					}
@@ -143,7 +149,10 @@ public class Interpreter {
 					//Remove robot
 					for(int i=0; i<RobotController.getRobots().size(); i++){
 						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getIdentification().getId()){
-							RobotController.getRobots().remove(RobotController.getRobots().get(i));
+							Robot robot = new Robot(RobotController.getRobots().get(i));
+							ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
+							robotList.remove(robot);
+							RobotController.setRobots(robotList);
 							break;
 						}
 					}
@@ -195,8 +204,11 @@ public class Interpreter {
 				}
 				else if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot) {
 					for (int i = 0; i < RobotController.getRobots().size(); i++) {
-						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId())
-							RobotController.getRobots().set(i, command.getRobots().get(0));
+						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId()){
+							ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
+							robotList.set(i, command.getRobots().get(0));
+							RobotController.setRobots(robotList);
+						}
 					}
 				}
 				return;
@@ -207,7 +219,7 @@ public class Interpreter {
 	
 	/**
 	 * <h1>Parse control</h1>
-	 * Parse of a synchronization command.
+	 * Parse of a szenario command.
 	 * 
 	 * @param pCommand Command as json object.
 	 * @throws Exception
@@ -236,6 +248,15 @@ public class Interpreter {
 		}
 	}
 	
+	/**
+	 * <h1>Parse control</h1>
+	 * Parse of a szenario command with control.
+	 * 
+	 * @param pCommand Command as json object.
+	 * @throws Exception
+	 * 
+	 * @author ThunderSL94
+	 */
 	private void szenarioControl(SzenarioCommand pCommand) throws Exception{
 		ControlType type = ControlType.valueOf(pCommand.getSzenario().getSzenariotype());
 		Client localclient = null;

@@ -26,6 +26,13 @@ public class Robot implements Device {
 		this.position = pPosition;
 		this.speed = pSpeed;
 	}
+	
+	public Robot(Robot pRobot){
+		this.identification = pRobot.getIdentification();
+		this.active = pRobot.isActive();
+		this.position = pRobot.getPosition();
+		this.speed = pRobot.getSpeed();
+	}
 
 	/**
 	 * <h1>Get robot</h1>
