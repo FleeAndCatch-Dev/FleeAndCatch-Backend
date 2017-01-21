@@ -12,6 +12,7 @@ import flee_and_catch.backend.communication.command.Command;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.ConnectionCommand;
 import flee_and_catch.backend.communication.command.ConnectionCommandType;
+import flee_and_catch.backend.communication.command.ControlCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommandType;
 import flee_and_catch.backend.communication.command.SzenarioCommand;
@@ -28,6 +29,7 @@ import flee_and_catch.backend.communication.command.szenario.SzenarioAdapter;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.controller.SzenarioController;
+import sun.management.counter.Variability;
 
 public class Interpreter {
 
@@ -262,6 +264,8 @@ public class Interpreter {
 			default:
 				throw new Exception("Argument out of range");
 		}
-		Server.sendCmd(localclient, pCommand.getCommand());
+		Control control = (Control) pCommand.getSzenario();
+		ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getSzenariotype(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
+		Server.sendCmd(localclient, cmd.getCommand());
 	}
 }
