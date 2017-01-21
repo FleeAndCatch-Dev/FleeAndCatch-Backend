@@ -46,4 +46,9 @@ public class App implements Device {
 	public boolean getActive() {
 		return active;
 	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+	
 }

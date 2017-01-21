@@ -1,18 +1,18 @@
 package flee_and_catch.backend.communication.command;
 
-public class ExceptionCommand {
-	/*private int exceptionid;
-	private String message;
-	private Device device;
-	
-	protected ExceptionCommand(String pId, String pType, ClientIdentification pIdentification, int pExceptionId, Device pDevice) {
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+
+public class ExceptionCommand extends Command {
+	private flee_and_catch.backend.communication.command.exception.Exception exception;
+
+	public ExceptionCommand(String pId, String pType, ClientIdentification pIdentification, flee_and_catch.backend.communication.command.exception.Exception pException) {
 		super(pId, pType, pIdentification);
-		this.exceptionid = pExceptionId;
-		this.message = ExceptionCommandType.values()[exceptionid].toString();
-		this.device = pDevice;
+		this.exception = pException;
 	}
 
-	@Override
 	public String getCommand() throws JSONException {
 		
 		JSONObject command = new JSONObject();
@@ -21,22 +21,12 @@ public class ExceptionCommand {
 		command.put("apiid", apiid);
 		command.put("errorhandling", errorhandling);
 		command.put("identification", identification.getJSONObject());
-		command.put("exceptionid", exceptionid);
-		command.put("message", message);
-		command.put("device", device.getJSONObject());
+		command.put("exception", exception.getJSONObject());
 		
 		return command.toString();
 	}
 
-	public int getExceptionid() {
-		return exceptionid;
+	public flee_and_catch.backend.communication.command.exception.Exception getException() {
+		return exception;
 	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public Device getDevice() {
-		return device;
-	}*/
 }

@@ -7,12 +7,25 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.sun.org.apache.bcel.internal.generic.NEW;
+
+import flee_and_catch.backend.communication.command.CommandType;
+import flee_and_catch.backend.communication.command.ExceptionCommand;
+import flee_and_catch.backend.communication.command.ExceptionCommandType;
 import flee_and_catch.backend.communication.command.component.IdentificationType;
+import flee_and_catch.backend.communication.command.device.app.App;
+import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.szenario.Szenario;
+import flee_and_catch.backend.controller.AppController;
+import flee_and_catch.backend.controller.RobotController;
+import flee_and_catch.backend.controller.SzenarioController;
 
 
 public final class Server {
@@ -103,11 +116,17 @@ public final class Server {
 						newClient(socket, id);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
-						
-						//Device is current logging out unhandled TODO !!!!!!!!
-						
-						
-						e.printStackTrace();
+						if(e instanceof SocketException){
+							try {
+								handleException(id, e);
+							} catch (IOException | JSONException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						}
+						else{
+							e.printStackTrace();
+						}
 					}
 				}
 			});
@@ -298,6 +317,163 @@ public final class Server {
 		return new JSONObject(pCommand);
 	}
 
+	private static void handleException(int pId, Exception e) throws IOException, JSONException{
+		//Get the client of the id
+		Client client = null;
+		for(int i=0; i<clients.size(); i++){
+			if(pId == clients.get(i).getIdentification().getId()){
+				client = clients.get(i);
+				break;
+			}
+		}
+		
+		if(client != null){
+			//Is the current device in a szenario
+			Szenario szenario = null;
+			IdentificationType type = IdentificationType.valueOf(client.getIdentification().getType());
+			for(int i=0; i<SzenarioController.getSzenarios().size(); i++){
+				switch (type) {
+					case App:
+						App app = (App)client.getDevice();
+						for(int j=0; j<SzenarioController.getSzenarios().get(i).getApps().size(); j++){
+							if(app.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getApps().get(j).getIdentification().getId()){
+								szenario = SzenarioController.getSzenarios().get(i);
+								break;
+							}
+						}
+						break;
+					case Robot:
+						Robot robot = (Robot)client.getDevice();
+						for(int j=0; j<SzenarioController.getSzenarios().get(i).getRobots().size(); j++){
+							if(robot.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId()){
+								szenario = SzenarioController.getSzenarios().get(i);
+								break;
+							}
+						}
+						break;
+					default:
+						break;
+				}
+			}
+			
+			if(szenario != null){
+				//The device is in a szenario
+				ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), e.getMessage(), client.getDevice()));
+				for(int i=0; i<szenario.getApps().size(); i++){
+					if(szenario.getApps().get(i).getIdentification().getId() != client.getIdentification().getId()){
+						szenario.getApps().get(i).setActive(false);
+						for(int j=0; j<clients.size(); j++){
+							if(clients.get(j).getIdentification().getId() == szenario.getApps().get(i).getIdentification().getId()){
+								Server.sendCmd(clients.get(j), cmd.getCommand());
+							}
+						}
+					}
+				}
+				for(int i=0; i<szenario.getRobots().size(); i++){
+					if(szenario.getRobots().get(i).getIdentification().getId() != client.getIdentification().getId()){
+						szenario.getRobots().get(i).setActive(false);
+						for(int j=0; j<clients.size(); j++){
+							if(clients.get(j).getIdentification().getId() == szenario.getRobots().get(i).getIdentification().getId()){
+								Server.sendCmd(clients.get(j), cmd.getCommand());
+							}
+						}
+					}
+				}
+				SzenarioController.getSzenarios().remove(szenario);
+			}
+			
+			//Remove device from controller
+			switch (type) {
+				case App:
+					App app = (App)client.getDevice();
+					AppController.getApps().remove(app);
+					break;
+				case Robot:
+					Robot robot = (Robot)client.getDevice();
+					RobotController.getRobots().remove(robot);
+					break;
+				default:
+					break;
+			}
+			//Close client
+			removeClient(client);
+		}
+	}
+	
+	
+	
+	/*Client client = null;
+	for(int i=0; i<clients.size(); i++){
+		if(id == clients.get(i).getIdentification().getId()){
+			client = clients.get(i);
+			break;
+		}
+	}
+	
+	if(client != null){
+		ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), e.getMessage(), client.getDevice()));
+		IdentificationType type = IdentificationType.valueOf(client.getIdentification().getType());
+		for(int i=0; i<SzenarioController.getSzenarios().size(); i++){
+			switch (type) {
+				case App:
+					App app = (App)client.getDevice();
+					for(int j=0; j<SzenarioController.getSzenarios().get(i).getApps().size(); j++){
+						if(app.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getApps().get(j).getIdentification().getId()){
+							Szenario currentSzenario = SzenarioController.getSzenarios().get(i);
+							for(int x=0; x<currentSzenario.getRobots().size(); x++){
+								for(int y=0; y<clients.size(); y++){
+									IdentificationType deviceType = IdentificationType.valueOf(clients.get(y).getIdentification().getType());
+									if(deviceType == IdentificationType.Robot){
+										Robot currentRobot = (Robot)clients.get(y).getDevice();
+										if(currentRobot.getIdentification().getId() == currentSzenario.getRobots().get(x).getIdentification().getId()){
+											currentSzenario.getRobots().get(x).setActive(false);
+											try {
+												Server.sendCmd(clients.get(y), cmd.getCommand());
+											} catch (IOException | JSONException e1) {
+												// TODO Auto-generated catch block
+												e1.printStackTrace();
+											}
+										}
+									}
+								}
+							}											
+							for(int x=0; x<currentSzenario.getApps().size(); x++){
+								for(int y=0; y<clients.size(); y++){
+									IdentificationType deviceType = IdentificationType.valueOf(clients.get(y).getIdentification().getType());
+									if(deviceType == IdentificationType.App){
+										App currentApp = (App)clients.get(y).getDevice();
+										if(currentApp != app){
+											if(currentApp.getIdentification().getId() == currentSzenario.getRobots().get(x).getIdentification().getId()){
+												currentSzenario.getApps().get(x).setActive(false);
+												try {
+													Server.sendCmd(clients.get(y), cmd.getCommand());
+												} catch (IOException | JSONException e1) {
+													// TODO Auto-generated catch block
+													e1.printStackTrace();
+												}
+											}
+										}
+										else {
+											currentApp.setActive(false);
+										}	
+									}													
+								}
+							}
+							SzenarioController.getSzenarios().remove(currentSzenario);
+						}
+					}
+					break;
+				case Robot:
+					for(int j=0; j<SzenarioController.getSzenarios().get(i).getRobots().size(); j++){
+						
+					}
+					break;
+				default:
+					break;
+			}
+		}
+	}*/
+	
 	public static boolean isOpened() {
 		return opened;
 	}
