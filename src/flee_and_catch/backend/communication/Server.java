@@ -7,21 +7,33 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import flee_and_catch.backend.communication.command.CommandType;
-import flee_and_catch.backend.communication.command.Connection;
-import flee_and_catch.backend.communication.command.ConnectionType;
-import flee_and_catch.backend.communication.command.Identification;
+import flee_and_catch.backend.communication.command.ExceptionCommand;
+import flee_and_catch.backend.communication.command.ExceptionCommandType;
+import flee_and_catch.backend.communication.command.component.IdentificationType;
+import flee_and_catch.backend.communication.command.device.app.App;
+import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.szenario.Szenario;
+import flee_and_catch.backend.controller.AppController;
+import flee_and_catch.backend.controller.RobotController;
+import flee_and_catch.backend.controller.SzenarioController;
+
 
 public final class Server {
 	private static boolean opened;
 	private static int port;
 	private static ServerSocket serverSocket;
 	private static ArrayList<Client> clients = new ArrayList<Client>();
+	private static Lock clientsLock = new ReentrantLock();
 	
 	/**
 	 * <h1>Open server</h1>
@@ -96,15 +108,26 @@ public final class Server {
 		while(opened){
 			System.out.println("Wait for clients ...");
 			final Socket socket = serverSocket.accept();
+			final int id = generateNewClientId();
 			Thread clientThread = new Thread(new Runnable() {
 				
 				@Override
 				public void run() {
 					try {
-						newClient(socket, generateNewClientId());
+						newClient(socket, id);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
-						e.printStackTrace();
+						if(e instanceof SocketException){
+							try {
+								handleException(id, e);
+							} catch (IOException | JSONException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						}
+						else{
+							e.printStackTrace();
+						}
 					}
 				}
 			});
@@ -127,15 +150,10 @@ public final class Server {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		Connection command = new Connection(CommandType.Connection.toString(), ConnectionType.SetId.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
-		sendCmd(outputStream, command.getCommand());
-		command = new Connection(CommandType.Connection.toString(), ConnectionType.GetType.toString(), new Identification(pId, pSocket.getInetAddress().getHostAddress(), port, "", ""));
-		sendCmd(outputStream, command.getCommand());
-		
-		Client client = new Client(true, pId, pSocket.getInetAddress().getHostAddress(), port, pSocket, bufferedReader, outputStream);
-		clients.add(client);
-		
-		System.out.println("New client added with id:" + String.valueOf(pId));
+		Client client = new Client(true, new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
+		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
+		clientList.add(client);
+		setClients(clientList);
 		
 		while(client.isConnected()){
 			client.getInterpreter().parse(receiveCmd(client));
@@ -249,7 +267,10 @@ public final class Server {
 		pClient.getOutputStream().close();
 		pClient.setConnected(false);		
 		pClient.getSocket().close();
-		clients.remove(pClient);
+		
+		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
+		clientList.remove(pClient);
+		setClients(clientList);
 	}
 
 	/**
@@ -262,12 +283,12 @@ public final class Server {
 	 */
 	public static int generateNewClientId() {
 		int result = 0;
-		ArrayList<Client> tmpclients = clients;
+		ArrayList<Client> tmpclients = getClients();
 		ArrayList<Client> sortclients = new ArrayList<Client>();
 		
 		for(int j=0; j<tmpclients.size(); j++){
 			for(int i=0; i<tmpclients.size() - 1; i++){
-				if(tmpclients.get(i).getId() < tmpclients.get(i + 1).getId()){
+				if(tmpclients.get(i).getIdentification().getId() < tmpclients.get(i + 1).getIdentification().getId()){
 					continue;
 				}
 				sortclients.add(tmpclients.get(i));
@@ -276,10 +297,10 @@ public final class Server {
 		}
 		
 		if(sortclients.size() > 0)
-			clients = sortclients;	
+			setClients(sortclients);
 		
-		for( int i=0; i<clients.size(); i++) {
-			if(clients.get(i).getId() == result)
+		for( int i=0; i<getClients().size(); i++) {
+			if(getClients().get(i).getIdentification().getId() == result)
 				result++;
 		}
 		
@@ -302,11 +323,106 @@ public final class Server {
 		return new JSONObject(pCommand);
 	}
 
+	//Handels the exception, when a device is unhandled disconnecting from the backend
+	private static void handleException(int pId, Exception e) throws IOException, JSONException{
+		//Get the client of the id
+		Client client = null;
+		for(int i=0; i<getClients().size(); i++){
+			if(pId == getClients().get(i).getIdentification().getId()){
+				client = getClients().get(i);
+				break;
+			}
+		}
+		
+		if(client != null){
+			//Is the current device in a szenario
+			Szenario szenario = null;
+			IdentificationType type = IdentificationType.valueOf(client.getIdentification().getType());
+			for(int i=0; i<SzenarioController.getSzenarios().size(); i++){
+				switch (type) {
+					case App:
+						App app = (App)client.getDevice();
+						for(int j=0; j<SzenarioController.getSzenarios().get(i).getApps().size(); j++){
+							if(app.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getApps().get(j).getIdentification().getId()){
+								szenario = SzenarioController.getSzenarios().get(i);
+								break;
+							}
+						}
+						break;
+					case Robot:
+						Robot robot = (Robot)client.getDevice();
+						for(int j=0; j<SzenarioController.getSzenarios().get(i).getRobots().size(); j++){
+							if(robot.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId()){
+								szenario = SzenarioController.getSzenarios().get(i);
+								break;
+							}
+						}
+						break;
+					default:
+						break;
+				}
+			}
+			
+			if(szenario != null){
+				//The device is in a szenario
+				ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), e.getMessage(), client.getDevice()));
+				for(int i=0; i<szenario.getApps().size(); i++){
+						for(int j=0; j<getClients().size(); j++){
+							if(getClients().get(j).getIdentification().getId() == szenario.getApps().get(i).getIdentification().getId()){
+								Server.sendCmd(getClients().get(j), cmd.getCommand());
+							}
+						}
+				}
+				for(int i=0; i<szenario.getRobots().size(); i++){
+						for(int j=0; j<getClients().size(); j++){
+							if(getClients().get(j).getIdentification().getId() == szenario.getRobots().get(i).getIdentification().getId()){
+								Server.sendCmd(getClients().get(j), cmd.getCommand());
+							}
+						}
+				}
+				//Remove from szenariolist
+				ArrayList<Szenario> szenarioList = new ArrayList<Szenario>(SzenarioController.getSzenarios());
+				szenarioList.remove(szenario);
+				SzenarioController.setSzenarios(szenarioList);
+			}
+			
+			//Remove device from controller
+			switch (type) {
+				case App:
+					App app = (App)client.getDevice();
+					ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
+					appList.remove(app);
+					AppController.setApps(appList);
+					break;
+				case Robot:
+					Robot robot = (Robot)client.getDevice();
+					ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
+					robotList.remove(robot);
+					RobotController.setRobots(robotList);
+					break;
+				default:
+					break;
+			}
+			//Close client
+			removeClient(client);
+		}
+	}
+	
 	public static boolean isOpened() {
 		return opened;
 	}
 
 	public static ArrayList<Client> getClients() {
-		return clients;
+		clientsLock.lock();
+		ArrayList<Client> clientList = new ArrayList<Client>(clients);
+		clientsLock.unlock();
+		
+		return clientList;
+	}
+
+	public static void setClients(ArrayList<Client> clients) {
+		clientsLock.lock();
+		Server.clients = clients;
+		clientsLock.unlock();
 	}
 }

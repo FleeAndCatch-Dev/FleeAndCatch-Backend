@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="res/main/lib/org.json.jar"/>
+	<classpathentry kind="lib" path="res/main/lib/org.json.jar" sourcepath="res/main/lib/gson-2.8.0.jar"/>
 	<classpathentry kind="lib" path="res/main/lib/gson-2.8.0.jar"/>
 	<classpathentry kind="output" path="target"/>
 </classpath>

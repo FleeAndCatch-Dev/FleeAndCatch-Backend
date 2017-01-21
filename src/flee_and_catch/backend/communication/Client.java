@@ -4,14 +4,14 @@ import java.io.BufferedReader;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import flee_and_catch.backend.communication.command.device.Device;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+
 public class Client {
 
 	private boolean connected;
-	private int id;
-	private String address;
-	private int port;
-	private String type;
-	private String subtype;	
+	private ClientIdentification identification;
+	private Device device;
 	private Socket socket;
 	private BufferedReader bufferedReader;
 	private OutputStream outputStream;
@@ -29,41 +29,29 @@ public class Client {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Client(boolean pConnected, int pId, String pAddress, int pPort,Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream) {
+	public Client(boolean pConnected, ClientIdentification pIdentification,Socket pSocket, BufferedReader pBufferedReader, OutputStream pOutputStream) {
 		this.connected = pConnected;
-		this.id = pId;
-		this.address = pAddress;
-		this.port = pPort;
+		this.identification = pIdentification;
 		this.socket = pSocket;
 		this.bufferedReader = pBufferedReader;
 		this.outputStream = pOutputStream;
 		this.interpreter = new Interpreter(this);
 	}
 
-	public int getId() {
-		return id;
-	}
-	
-	public String getAddress() {
-		return address;
+	public Device getDevice() {
+		return device;
 	}
 
-	public int getPort() {
-		return port;
+	public void setDevice(Device pDevice) {
+		this.device = pDevice;
 	}
 
-	public String getType() {
-		return type;
+	public ClientIdentification getIdentification() {
+		return identification;
 	}
-	public void setType(String type) {
-		this.type = type;
-	}
-	
-	public String getSubtype() {
-		return subtype;
-	}
-	public void setSubtype(String subtype) {
-		this.subtype = subtype;
+
+	public void setIdentification(ClientIdentification identification) {
+		this.identification = identification;
 	}
 
 	public boolean isConnected() {

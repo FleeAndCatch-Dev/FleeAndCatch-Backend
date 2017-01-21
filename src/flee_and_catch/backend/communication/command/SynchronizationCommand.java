@@ -6,7 +6,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Synchronization extends Command {
+import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+
+public class SynchronizationCommand extends Command {
 	private ArrayList<Robot> robots;
 	
 	/**
@@ -20,7 +23,7 @@ public class Synchronization extends Command {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public Synchronization(String pId, String pType, Identification pIdentification, ArrayList<Robot> pRobots){
+	public SynchronizationCommand(String pId, String pType, ClientIdentification pIdentification, ArrayList<Robot> pRobots){
 		super(pId, pType, pIdentification);
 		this.robots = pRobots;
 	}
