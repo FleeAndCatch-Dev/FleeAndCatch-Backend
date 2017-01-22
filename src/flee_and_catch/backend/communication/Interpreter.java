@@ -12,6 +12,8 @@ import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.ConnectionCommand;
 import flee_and_catch.backend.communication.command.ConnectionCommandType;
 import flee_and_catch.backend.communication.command.ControlCommand;
+import flee_and_catch.backend.communication.command.ExceptionCommand;
+import flee_and_catch.backend.communication.command.ExceptionCommandType;
 import flee_and_catch.backend.communication.command.SynchronizationCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommandType;
 import flee_and_catch.backend.communication.command.SzenarioCommand;
@@ -146,14 +148,56 @@ public class Interpreter {
 					}
 					break;
 				case Robot:
-					//Remove robot
+					//Get the robot
+					Robot robot = null;
 					for(int i=0; i<RobotController.getRobots().size(); i++){
 						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getIdentification().getId()){
-							Robot robot = new Robot(RobotController.getRobots().get(i));
-							ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
-							robotList.remove(robot);
-							RobotController.setRobots(robotList);
+							robot = new Robot(RobotController.getRobots().get(i));
 							break;
+						}
+					}
+					
+					if(robot != null){
+						//Is the robot in a szenario
+						Szenario szenario = null;
+						for(int i=0; i<SzenarioController.getSzenarios().size(); i++){
+							for(int j=0; j<SzenarioController.getSzenarios().get(i).getRobots().size(); j++){
+								if(SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId() == robot.getIdentification().getId()){
+									SzenarioCommandType type2 = SzenarioCommandType.valueOf(SzenarioController.getSzenarios().get(i).getSzenarioid());
+									switch (type2) {
+										case Control:
+											szenario = new Control((Control) SzenarioController.getSzenarios().get(i));
+											break;
+										default:
+											break;
+									}
+								}
+							}
+						}
+						
+						if(szenario != null){
+							//The device is in a szenario
+							ExceptionCommand cmd1 = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.Disconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.Disconnection.toString(), "Robot " + robot.getIdentification().getId() + " disconnect", robot));
+							for(int i=0; i<szenario.getApps().size(); i++){
+								szenario.getApps().get(i).setActive(false);
+								for(int j=0; j<Server.getClients().size(); j++){
+									if(Server.getClients().get(j).getIdentification().getId() == szenario.getApps().get(i).getIdentification().getId()){
+										Server.sendCmd(Server.getClients().get(j), cmd1.getCommand());
+									}
+								}
+							}
+						}
+						
+						//Remove robot from list
+						ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
+						robotList.remove(robot);
+						RobotController.setRobots(robotList);
+						
+						if(szenario != null && szenario.getRobots().size() == 0){
+							//Remove from szenariolist
+							ArrayList<Szenario> szenarioList = new ArrayList<Szenario>(SzenarioController.getSzenarios());
+							szenarioList.remove(szenario);
+							SzenarioController.setSzenarios(szenarioList);
 						}
 					}
 					break;

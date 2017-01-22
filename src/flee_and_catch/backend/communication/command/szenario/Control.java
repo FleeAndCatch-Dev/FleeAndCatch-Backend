@@ -17,6 +17,11 @@ public class Control extends Szenario {
 		super(pSzenarioId, pSzenarioType, pApps, pRobots);
 		this.steering = steering;
 	}
+	
+	public Control(Control pControl) {
+		super(pControl.getSzenarioid(), pControl.getSzenariotype(), pControl.getApps(), pControl.getRobots());
+		this.steering = pControl.getSteering();
+	}
 
 	@Override
 	public JSONObject getJSONObject() throws JSONException {
