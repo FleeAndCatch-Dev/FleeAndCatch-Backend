@@ -367,18 +367,20 @@ public final class Server {
 				//The device is in a szenario
 				ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), e.getMessage(), client.getDevice()));
 				for(int i=0; i<szenario.getApps().size(); i++){
-						for(int j=0; j<getClients().size(); j++){
-							if(getClients().get(j).getIdentification().getId() == szenario.getApps().get(i).getIdentification().getId()){
-								Server.sendCmd(getClients().get(j), cmd.getCommand());
-							}
+					szenario.getApps().get(i).setActive(false);
+					for(int j=0; j<getClients().size(); j++){
+						if(getClients().get(j).getIdentification().getId() == szenario.getApps().get(i).getIdentification().getId()){
+							Server.sendCmd(getClients().get(j), cmd.getCommand());
 						}
+					}
 				}
 				for(int i=0; i<szenario.getRobots().size(); i++){
-						for(int j=0; j<getClients().size(); j++){
-							if(getClients().get(j).getIdentification().getId() == szenario.getRobots().get(i).getIdentification().getId()){
-								Server.sendCmd(getClients().get(j), cmd.getCommand());
-							}
+					szenario.getRobots().get(i).setActive(false);
+					for(int j=0; j<getClients().size(); j++){
+						if(getClients().get(j).getIdentification().getId() == szenario.getRobots().get(i).getIdentification().getId()){
+							Server.sendCmd(getClients().get(j), cmd.getCommand());
 						}
+					}
 				}
 				//Remove from szenariolist
 				ArrayList<Szenario> szenarioList = new ArrayList<Szenario>(SzenarioController.getSzenarios());
