@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
 import flee_and_catch.backend.communication.command.device.app.App;
 
 public final class AppController {

@@ -1,12 +1,12 @@
 package flee_and_catch.backend.communication;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.org.apache.bcel.internal.util.Objects;
 
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.ConnectionCommand;
@@ -30,7 +30,6 @@ import flee_and_catch.backend.communication.command.szenario.SzenarioAdapter;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.controller.SzenarioController;
-import sun.management.counter.Variability;
 
 public class Interpreter {
 
@@ -130,10 +129,11 @@ public class Interpreter {
 				Server.sendCmd(client, command.getCommand());
 				return;
 			case Disconnect:
+				////////////Testing for bugs
 				ConnectionCommand cmd = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Disconnect.toString(), client.getIdentification(), command.getDevice());
 				
 				Server.sendCmd(client, cmd.getCommand());
-				clienttype = IdentificationType.valueOf(command.getIdentification().getType());
+				/*clienttype = IdentificationType.valueOf(command.getIdentification().getType());
 				switch(clienttype){
 				case App:
 					//Remove app
@@ -204,7 +204,10 @@ public class Interpreter {
 				default:
 					throw new Exception("Undefined disconnection");
 				}
-				Server.removeClient(client);
+				Server.removeClient(client);*/
+				
+				Server.handleDisconnection(client.getIdentification().getId(), "Device is correct disconnecting");
+				
 				return;
 			default:
 				throw new Exception("Argument out of range");
