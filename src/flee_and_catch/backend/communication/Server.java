@@ -11,13 +11,8 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import flee_and_catch.backend.communication.command.CommandType;
-import flee_and_catch.backend.communication.command.ExceptionCommand;
-import flee_and_catch.backend.communication.command.ExceptionCommandType;
 import flee_and_catch.backend.communication.command.component.IdentificationType;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;

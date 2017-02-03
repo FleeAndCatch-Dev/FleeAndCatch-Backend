@@ -1,7 +1,5 @@
 package flee_and_catch.backend.communication.command;
 
-import org.json.JSONException;
-
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
 public abstract class Command {
@@ -27,8 +25,6 @@ public abstract class Command {
 		this.apiid = "@@fleeandcatch@@";
 		this.identification = pIdentification;
 	}
-	
-	public abstract String getCommand() throws JSONException;
 
 	public String getId() {
 		return id;

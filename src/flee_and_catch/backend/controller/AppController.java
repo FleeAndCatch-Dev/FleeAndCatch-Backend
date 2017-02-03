@@ -11,6 +11,16 @@ public final class AppController {
 	private static ArrayList<App> apps = new ArrayList<App>();
 	private static Lock appsLock = new ReentrantLock();
 
+	public static void changeActive(App pApp, boolean pState){
+		pApp.setActive(pState);
+		for(int i=0; i<AppController.getApps().size(); i++){
+			if(AppController.getApps().get(i).getIdentification().getId() == pApp.getIdentification().getId()){
+				//Check if robots equal
+				AppController.getApps().get(i).setActive(pState);
+			}
+		}
+	}
+	
 	public static List<App> getApps() {
 		appsLock.lock();
 		ArrayList<App> appList = new ArrayList<App>(apps);
