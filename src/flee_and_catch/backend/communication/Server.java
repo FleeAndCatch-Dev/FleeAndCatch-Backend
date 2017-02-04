@@ -13,6 +13,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.google.gson.Gson;
+
+import flee_and_catch.backend.communication.command.CommandType;
+import flee_and_catch.backend.communication.command.ExceptionCommand;
+import flee_and_catch.backend.communication.command.ExceptionCommandType;
 import flee_and_catch.backend.communication.command.component.IdentificationType;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
@@ -318,7 +324,7 @@ public final class Server {
 		return new JSONObject(pCommand);
 	}
 
-	private static Client getClientOfId(int pId){
+	public static Client getClientOfId(int pId){
 		//Get the client of the id
 		Client client = null;
 		for(int i=0; i<getClients().size(); i++){
@@ -329,7 +335,7 @@ public final class Server {
 		}
 		return client;
 	}	
-	private static Szenario getSzenarioOfClient(Client pClient){
+	public static Szenario getSzenarioOfClient(Client pClient){
 		//Is the current device in a szenario
 		Szenario szenario = null;
 		IdentificationType type = IdentificationType.valueOf(pClient.getIdentification().getType());
@@ -359,7 +365,7 @@ public final class Server {
 		}
 		return szenario;
 	}
-	private static ArrayList<Client> getSzenarioMember(Szenario pSzenario){
+	public static ArrayList<Client> getSzenarioMember(Szenario pSzenario){
 		ArrayList<Client> szenarioMember = new ArrayList<Client>();
 		
 		for(int i=0; i<pSzenario.getApps().size(); i++){
@@ -386,12 +392,14 @@ public final class Server {
 		
 		Client client = getClientOfId(pId);
 		if(client != null){
+			Gson gson = new Gson();
+			ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), pMessage, client.getDevice()));
 			Szenario szenario = getSzenarioOfClient(client);
 			if(szenario != null){
 				ArrayList<Client> szenarioMember = getSzenarioMember(szenario);
 				
 				for(int i=0; i<szenarioMember.size(); i++){
-					Server.sendCmd(szenarioMember.get(i), pMessage);
+					Server.sendCmd(szenarioMember.get(i), gson.toJson(cmd));
 				}
 				
 				
