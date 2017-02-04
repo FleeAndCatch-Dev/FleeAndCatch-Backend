@@ -10,6 +10,18 @@ public final class SzenarioController {
 	private static ArrayList<Szenario> szenarios = new ArrayList<Szenario>();
 	private static Lock szenariosLock = new ReentrantLock();
 
+	public static void addNew(Szenario pSzenario){
+		szenariosLock.lock();
+		szenarios.add(pSzenario);
+		szenariosLock.unlock();
+	}
+	
+	public static void remove(Szenario pSzenario){
+		szenariosLock.lock();
+		szenarios.remove(pSzenario);
+		szenariosLock.unlock();
+	}
+	
 	public static ArrayList<Szenario> getSzenarios() {
 		szenariosLock.lock();
 		ArrayList<Szenario> szenarioList = new ArrayList<Szenario>(szenarios);

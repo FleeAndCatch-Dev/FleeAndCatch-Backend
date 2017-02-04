@@ -1,7 +1,6 @@
 package flee_and_catch.backend.communication;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Objects;
 
 import org.json.JSONException;
@@ -111,9 +110,7 @@ public class Interpreter {
 					command.getIdentification().setId(client.getIdentification().getId());
 					client.setIdentification(command.getIdentification());
 					client.setDevice(app);
-					ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
-					appList.add(app);
-					AppController.setApps(appList);
+					AppController.addNew(app);
 					break;
 				case Robot:
 					Robot robot = (Robot)command.getDevice();
@@ -121,9 +118,7 @@ public class Interpreter {
 					command.getIdentification().setId(client.getIdentification().getId());
 					client.setIdentification(command.getIdentification());
 					client.setDevice(robot);
-					ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
-					robotList.add(robot);
-					RobotController.setRobots(robotList);
+					RobotController.addNew(robot);
 					break;
 				default:
 					throw new Exception("Undefined connection");
@@ -143,9 +138,7 @@ public class Interpreter {
 					for(int i=0; i<AppController.getApps().size(); i++){
 						if(AppController.getApps().get(i).getIdentification().getId() == command.getIdentification().getId()){
 							App app = new App(AppController.getApps().get(i));
-							ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
-							appList.remove(app);
-							AppController.setApps(appList);
+							AppController.remove(app);
 							break;
 						}
 					}
@@ -155,9 +148,7 @@ public class Interpreter {
 					for(int i=0; i<RobotController.getRobots().size(); i++){
 						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getIdentification().getId()){
 							Robot robot = new Robot(RobotController.getRobots().get(i));
-							ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
-							robotList.remove(robot);
-							RobotController.setRobots(robotList);
+							RobotController.remove(robot);
 							break;
 						}
 					}
@@ -197,7 +188,46 @@ public class Interpreter {
 					throw new Exception("Not implemented");
 				return;
 			case Current:
-				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
+				//New update from a robot
+				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot){
+					//Get the szenario of the robot
+					Szenario szenario = null;
+					for(int i=0;i<SzenarioController.getSzenarios().size();i++){
+						for(int j=0;j<SzenarioController.getSzenarios().get(i).getRobots().size();j++){
+							if(SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId() == command.getIdentification().getId()){
+								szenario = SzenarioController.getSzenarios().get(i);
+								break;
+							}
+						}
+					}
+					if(szenario != null){
+						for(int i=0;i<szenario.getApps().size();i++){
+							//Get the client for the app
+							Client localclient = null;
+							for(int j=0;j<Server.getClients().size();j++){
+								if(szenario.getApps().get(i).getIdentification().getId() == Server.getClients().get(j).getIdentification().getId()){
+									localclient = Server.getClients().get(j);
+									break;
+								}
+							}
+							if(localclient != null){
+								Gson gson = new Gson();
+								SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.Current.toString(), client.getIdentification(), command.getRobots());
+								Server.sendCmd(localclient, gson.toJson(cmd));
+							}
+						}
+					}
+				}
+				
+				/*Client localclient = null;
+				for(int i=0;i<Server.getClients().size();i++){
+					if(pCommand.getSzenario().getRobots().get(0).getIdentification().getId() == Server.getClients().get(i).getIdentification().getId()){
+						localclient = Server.getClients().get(i);
+						break;
+					}
+				}*/
+				
+				/*if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
 					ArrayList<Robot> robotlist = new ArrayList<Robot>();
 					for(int i=0;i<RobotController.getRobots().size();i++){
 						for(int j=0;j<command.getRobots().size();j++){
@@ -217,7 +247,7 @@ public class Interpreter {
 							RobotController.setRobots(robotList);
 						}
 					}
-				}
+				}*/
 				return;
 			default:
 				throw new Exception("Argument out of range");
@@ -278,7 +308,7 @@ public class Interpreter {
 
 		switch (type) {
 			case Begin:
-				SzenarioController.getSzenarios().add(pCommand.getSzenario());
+				SzenarioController.addNew(pCommand.getSzenario());
 				RobotController.changeActive(pCommand.getSzenario().getRobots().get(0), true);
 				AppController.changeActive(pCommand.getSzenario().getApps().get(0), true);
 				
@@ -302,7 +332,7 @@ public class Interpreter {
 				
 				break;
 			case End:
-				SzenarioController.getSzenarios().remove(pCommand.getSzenario());
+				SzenarioController.remove(pCommand.getSzenario());
 				RobotController.changeActive(pCommand.getSzenario().getRobots().get(0), false);
 				AppController.changeActive(pCommand.getSzenario().getApps().get(0), false);
 				

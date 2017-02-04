@@ -21,6 +21,18 @@ public final class AppController {
 		}
 	}
 	
+	public static void addNew(App pApp){
+		appsLock.lock();
+		apps.add(pApp);
+		appsLock.unlock();
+	}
+	
+	public static void remove(App pApp){
+		appsLock.lock();
+		apps.remove(pApp);
+		appsLock.unlock();
+	}
+	
 	public static List<App> getApps() {
 		appsLock.lock();
 		ArrayList<App> appList = new ArrayList<App>(apps);
