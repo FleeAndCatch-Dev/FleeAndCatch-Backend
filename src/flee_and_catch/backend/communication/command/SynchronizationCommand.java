@@ -1,11 +1,6 @@
 package flee_and_catch.backend.communication.command;
 
 import java.util.ArrayList;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
 
@@ -26,30 +21,6 @@ public class SynchronizationCommand extends Command {
 	public SynchronizationCommand(String pId, String pType, ClientIdentification pIdentification, ArrayList<Robot> pRobots){
 		super(pId, pType, pIdentification);
 		this.robots = pRobots;
-	}
-
-	@Override
-	/**
-	 * <h1>Get command</h1>
-	 * Get command as json string.
-	 * 
-	 * @author ThunderSL94
-	 */
-	public String getCommand() throws JSONException {
-		JSONArray robotarray = new JSONArray();
-		for(int i=0; i<robots.size(); i++){
-			robotarray.put(robots.get(i).getJSONObject());
-		}
-		
-		JSONObject command = new JSONObject();
-		command.put("id", id);
-		command.put("type", type);
-		command.put("apiid", apiid);
-		command.put("errorhandling", errorhandling);
-		command.put("identification", identification.getJSONObject());
-		command.put("robots", robotarray);
-		
-		return command.toString();
 	}
 
 	public ArrayList<Robot> getRobots() {

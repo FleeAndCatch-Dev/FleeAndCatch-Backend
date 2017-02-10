@@ -1,17 +1,17 @@
 package flee_and_catch.backend.communication;
 
-import java.util.ArrayList;
-
+import java.util.Objects;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.org.apache.bcel.internal.util.Objects;
 
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.ConnectionCommand;
 import flee_and_catch.backend.communication.command.ConnectionCommandType;
 import flee_and_catch.backend.communication.command.ControlCommand;
+import flee_and_catch.backend.communication.command.ExceptionCommand;
+import flee_and_catch.backend.communication.command.ExceptionCommandType;
 import flee_and_catch.backend.communication.command.SynchronizationCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommandType;
 import flee_and_catch.backend.communication.command.SzenarioCommand;
@@ -28,7 +28,6 @@ import flee_and_catch.backend.communication.command.szenario.SzenarioAdapter;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.controller.SzenarioController;
-import sun.management.counter.Variability;
 
 public class Interpreter {
 
@@ -74,6 +73,9 @@ public class Interpreter {
 			case Szenario:
 				szenario(jsonCommand);
 				return;
+			case Exception:
+				exception(jsonCommand);
+				return;
 			default:
 				throw new Exception("Argument out of range");
 		}
@@ -88,28 +90,26 @@ public class Interpreter {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private void connection(JSONObject pCommand) throws Exception {
-		if(pCommand == null) throw new NullPointerException();
-		ConnectionCommandType type = ConnectionCommandType.valueOf((String) pCommand.get("type"));
+	private void connection(JSONObject pCommand) throws Exception {		
 		GsonBuilder builder = new GsonBuilder();
 		builder.registerTypeAdapter(Device.class, new DeviceAdapter());
 		builder.setPrettyPrinting();
 		Gson localgson = builder.create();		
-		
 		ConnectionCommand command = localgson.fromJson(pCommand.toString(), ConnectionCommand.class);
-		IdentificationType clienttype;
+		
+		ConnectionCommandType type = ConnectionCommandType.valueOf(command.getType());		
+		
 		switch(type){
 			case Connect:
+				//Set id and update object instances
 				switch (IdentificationType.valueOf(command.getIdentification().getType())) {
-				case App:
+				case App:		
 					App app = (App)command.getDevice();
 					app.getIdentification().setId(client.getIdentification().getId());
 					command.getIdentification().setId(client.getIdentification().getId());
 					client.setIdentification(command.getIdentification());
 					client.setDevice(app);
-					ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
-					appList.add(app);
-					AppController.setApps(appList);
+					AppController.addNew(app);
 					break;
 				case Robot:
 					Robot robot = (Robot)command.getDevice();
@@ -117,42 +117,37 @@ public class Interpreter {
 					command.getIdentification().setId(client.getIdentification().getId());
 					client.setIdentification(command.getIdentification());
 					client.setDevice(robot);
-					ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
-					robotList.add(robot);
-					RobotController.setRobots(robotList);
+					RobotController.addNew(robot);
 					break;
 				default:
 					throw new Exception("Undefined connection");
 				}	
+				Gson gson = new Gson();
 				command = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Connect.toString(), client.getIdentification(), client.getDevice());
-				Server.sendCmd(client, command.getCommand());
+				Server.sendCmd(client, gson.toJson(command));
 				return;
 			case Disconnect:
-				ConnectionCommand cmd = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Disconnect.toString(), client.getIdentification(), command.getDevice());
-				
-				Server.sendCmd(client, cmd.getCommand());
-				clienttype = IdentificationType.valueOf(command.getIdentification().getType());
+				Gson gson1 = new Gson();
+				ConnectionCommand cmd = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Disconnect.toString(), client.getIdentification(), command.getDevice());				
+				Server.sendCmd(client, gson1.toJson(cmd));
+				IdentificationType clienttype = IdentificationType.valueOf(command.getIdentification().getType());
 				switch(clienttype){
 				case App:
 					//Remove app
 					for(int i=0; i<AppController.getApps().size(); i++){
 						if(AppController.getApps().get(i).getIdentification().getId() == command.getIdentification().getId()){
 							App app = new App(AppController.getApps().get(i));
-							ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
-							appList.remove(app);
-							AppController.setApps(appList);
+							AppController.remove(app);
 							break;
 						}
 					}
 					break;
-				case Robot:
+				case Robot:			
 					//Remove robot
 					for(int i=0; i<RobotController.getRobots().size(); i++){
 						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getIdentification().getId()){
 							Robot robot = new Robot(RobotController.getRobots().get(i));
-							ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
-							robotList.remove(robot);
-							RobotController.setRobots(robotList);
+							RobotController.remove(robot);
 							break;
 						}
 					}
@@ -160,7 +155,7 @@ public class Interpreter {
 				default:
 					throw new Exception("Undefined disconnection");
 				}
-				Server.removeClient(client);
+				Server.removeClient(client);				
 				return;
 			default:
 				throw new Exception("Argument out of range");
@@ -176,38 +171,46 @@ public class Interpreter {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private void synchronization(JSONObject pCommand) throws Exception{
-		if(pCommand == null) throw new NullPointerException();
-		SynchronizationCommandType type = SynchronizationCommandType.valueOf((String) pCommand.get("type"));
+	private void synchronization(JSONObject pCommand) throws Exception{		
 		SynchronizationCommand command = gson.fromJson(pCommand.toString(), SynchronizationCommand.class);
+		SynchronizationCommandType type = SynchronizationCommandType.valueOf(command.getType());
 		
 		switch(type){
 			case All:
 				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
+					Gson gson = new Gson();
 					SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.All.toString(), client.getIdentification(), RobotController.getRobots());
-					Server.sendCmd(client, cmd.getCommand());
+					Server.sendCmd(client, gson.toJson(cmd));
 				}
-				else
-					throw new Exception("Not implemented");
 				return;
 			case Current:
-				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
-					ArrayList<Robot> robotlist = new ArrayList<Robot>();
-					for(int i=0;i<RobotController.getRobots().size();i++){
-						for(int j=0;j<command.getRobots().size();j++){
-							if(RobotController.getRobots().get(i).getIdentification() == command.getRobots().get(j).getIdentification())
-								robotlist.add(RobotController.getRobots().get(i));
+				//New update from a robot
+				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot){
+					//Get the szenario of the robot
+					Szenario szenario = null;
+					for(int i=0;i<SzenarioController.getSzenarios().size();i++){
+						for(int j=0;j<SzenarioController.getSzenarios().get(i).getRobots().size();j++){
+							if(SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId() == command.getIdentification().getId()){
+								szenario = SzenarioController.getSzenarios().get(i);
+								break;
+							}
 						}
 					}
-					SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.All.toString(), client.getIdentification(), robotlist);
-					Server.sendCmd(client, cmd.getCommand());
-				}
-				else if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot) {
-					for (int i = 0; i < RobotController.getRobots().size(); i++) {
-						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId()){
-							ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
-							robotList.set(i, command.getRobots().get(0));
-							RobotController.setRobots(robotList);
+					if(szenario != null){
+						for(int i=0;i<szenario.getApps().size();i++){
+							//Get the client for the app
+							Client localclient = null;
+							for(int j=0;j<Server.getClients().size();j++){
+								if(szenario.getApps().get(i).getIdentification().getId() == Server.getClients().get(j).getIdentification().getId()){
+									localclient = Server.getClients().get(j);
+									break;
+								}
+							}
+							if(localclient != null){
+								Gson gson = new Gson();
+								SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.Current.toString(), client.getIdentification(), command.getRobots());
+								Server.sendCmd(localclient, gson.toJson(cmd));
+							}
 						}
 					}
 				}
@@ -227,21 +230,23 @@ public class Interpreter {
 	 * @author ThunderSL94
 	 */
 	private void szenario(JSONObject pCommand) throws Exception{
-		if(pCommand == null) throw new NullPointerException();
-		SzenarioCommandType type = SzenarioCommandType.valueOf((String) pCommand.get("type"));
 		GsonBuilder builder = new GsonBuilder();
 		builder.registerTypeAdapter(Szenario.class, new SzenarioAdapter());
 		builder.setPrettyPrinting();
 		Gson localgson = builder.create();			
 		SzenarioCommand command = localgson.fromJson(pCommand.toString(), SzenarioCommand.class);
 		
+		SzenarioCommandType type = SzenarioCommandType.valueOf(command.getType());
+		
 		switch (type) {
 			case Control:
 				szenarioControl(command);
 				break;
 			case Synchron:
+				// TODO
 				break;
 			case Follow:
+				// TODO
 				break;
 			default:
 				break;
@@ -259,6 +264,8 @@ public class Interpreter {
 	 */
 	private void szenarioControl(SzenarioCommand pCommand) throws Exception{
 		ControlType type = ControlType.valueOf(pCommand.getSzenario().getSzenariotype());
+		
+		//Szenario control command from App
 		Client localclient = null;
 		for(int i=0;i<Server.getClients().size();i++){
 			if(pCommand.getSzenario().getRobots().get(0).getIdentification().getId() == Server.getClients().get(i).getIdentification().getId()){
@@ -269,24 +276,99 @@ public class Interpreter {
 
 		switch (type) {
 			case Begin:
-				SzenarioController.getSzenarios().add(pCommand.getSzenario());
-				RobotController.changeActive(pCommand.getSzenario().getRobots().get(0), true);
+				SzenarioController.addNew(pCommand.getSzenario());
+				//Set devices active -> true
+				for(int i=0;i<pCommand.getSzenario().getRobots().size();i++){
+					RobotController.changeActive(pCommand.getSzenario().getRobots().get(i), true);
+				}
+				for(int i=0;i<pCommand.getSzenario().getApps().size();i++){
+					AppController.changeActive(pCommand.getSzenario().getApps().get(i), true);
+				}			
+				//Set the szenario to the clients
+				for(int i=0;i<Server.getClients().size();i++){
+					for(int j=0;j<pCommand.getSzenario().getApps().size();j++){
+						if(Server.getClients().get(i).getDevice() instanceof App){
+							if(((App)Server.getClients().get(i).getDevice()).getIdentification().getId() == pCommand.getSzenario().getApps().get(j).getIdentification().getId())
+								Server.getClients().get(i).setSzenario(pCommand.getSzenario());
+						}
+					}
+				}
+				for(int i=0;i<Server.getClients().size();i++){
+					for(int j=0;j<pCommand.getSzenario().getRobots().size();j++){
+						if(Server.getClients().get(i).getDevice() instanceof Robot){
+							if(((Robot)Server.getClients().get(i).getDevice()).getIdentification().getId() == pCommand.getSzenario().getRobots().get(j).getIdentification().getId())
+								Server.getClients().get(i).setSzenario(pCommand.getSzenario());
+						}
+					}
+				}
+					
 				break;
 			case End:
-				SzenarioController.getSzenarios().remove(pCommand.getSzenario());
-				RobotController.changeActive(pCommand.getSzenario().getRobots().get(0), false);
+				SzenarioController.remove(pCommand.getSzenario());
+				//Set devices active -> false
+				for(int i=0;i<pCommand.getSzenario().getRobots().size();i++){
+					RobotController.changeActive(pCommand.getSzenario().getRobots().get(i), false);
+				}
+				for(int i=0;i<pCommand.getSzenario().getApps().size();i++){
+					AppController.changeActive(pCommand.getSzenario().getApps().get(i), false);
+				}	
+					
+				//Set the szenario to the clients of null
+				for(int i=0;i<Server.getClients().size();i++){
+					for(int j=0;j<pCommand.getSzenario().getApps().size();j++){
+						if(Server.getClients().get(i).getDevice() instanceof App){
+							if(((App)Server.getClients().get(i).getDevice()).getIdentification().getId() == pCommand.getSzenario().getApps().get(j).getIdentification().getId())
+								Server.getClients().get(i).setSzenario(null);
+						}
+					}
+				}
+				for(int i=0;i<Server.getClients().size();i++){
+					for(int j=0;j<pCommand.getSzenario().getRobots().size();j++){
+						if(Server.getClients().get(i).getDevice() instanceof Robot){
+							if(((Robot)Server.getClients().get(i).getDevice()).getIdentification().getId() == pCommand.getSzenario().getRobots().get(j).getIdentification().getId())
+								Server.getClients().get(i).setSzenario(null);
+						}
+					}
+				}
 				break;
 			case Start:
+				//No implementation needed
 				break;
 			case Stop:
+				//No implementation needed
 				break;
 			case Control:
+				//No implementation needed
 				break;
 			default:
 				throw new Exception("Argument out of range");
 		}
 		Control control = (Control) pCommand.getSzenario();
+		Gson gson = new Gson();
 		ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getSzenariotype(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
-		Server.sendCmd(localclient, cmd.getCommand());
+		if(localclient != null){
+			Server.sendCmd(localclient, gson.toJson(cmd));
+		}
+	}
+	
+	private void exception(JSONObject pCommand) throws Exception {
+
+		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(Device.class, new DeviceAdapter());
+		builder.setPrettyPrinting();
+		Gson localgson = builder.create();				
+		ExceptionCommand command = localgson.fromJson(pCommand.toString(), ExceptionCommand.class);
+		
+		ExceptionCommandType type = ExceptionCommandType.valueOf(command.getType());
+		switch (type) {
+			case Undefined:
+				System.out.println(command.getException().getMessage());
+				break;
+			case UnhandeldDisconnection:
+				Server.handleDisconnection(command.getIdentification().getId(), "Device is disconnecting");
+				break;
+			default:
+				throw new Exception("Argument out of range");
+		}
 	}
 }

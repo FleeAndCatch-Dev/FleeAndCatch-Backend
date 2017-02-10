@@ -1,8 +1,17 @@
 package flee_and_catch.backend.communication.command.device;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-public interface Device {
-	JSONObject getJSONObject() throws JSONException;
+public abstract class Device {
+	
+	protected boolean active;
+	
+	public Device(boolean pActive) {
+		this.active = pActive;
+	}
+	
+	public boolean isActive() {
+		return active;
+	}
+	public void setActive(boolean active) {
+		this.active = active;
+	}
 }

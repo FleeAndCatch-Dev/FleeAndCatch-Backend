@@ -6,12 +6,14 @@ import java.net.Socket;
 
 import flee_and_catch.backend.communication.command.device.Device;
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.szenario.Szenario;
 
 public class Client {
 
 	private boolean connected;
 	private ClientIdentification identification;
 	private Device device;
+	private Szenario szenario;
 	private Socket socket;
 	private BufferedReader bufferedReader;
 	private OutputStream outputStream;
@@ -37,13 +39,28 @@ public class Client {
 		this.outputStream = pOutputStream;
 		this.interpreter = new Interpreter(this);
 	}
+	
+	public Client(Client pClient) {
+		this.connected = pClient.isConnected();
+		this.identification = pClient.getIdentification();
+		this.socket = pClient.getSocket();
+		this.bufferedReader = pClient.getBufferedReader();
+		this.outputStream = pClient.getOutputStream();
+		this.interpreter = pClient.getInterpreter();
+	}
 
 	public Device getDevice() {
 		return device;
 	}
-
 	public void setDevice(Device pDevice) {
 		this.device = pDevice;
+	}
+
+	public Szenario getSzenario() {
+		return szenario;
+	}
+	public void setSzenario(Szenario szenario) {
+		this.szenario = szenario;
 	}
 
 	public ClientIdentification getIdentification() {

@@ -1,8 +1,5 @@
 package flee_and_catch.backend.communication.command.exception;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import flee_and_catch.backend.communication.command.device.Device;
 
 public class Exception {
@@ -16,15 +13,6 @@ public class Exception {
         this.message = pMessage;
         this.device = pDevice;
     }
-
-    public JSONObject getJSONObject() throws JSONException{
-		JSONObject jsonException = new JSONObject();
-		jsonException.put("type", type);
-		jsonException.put("message", message);
-		jsonException.put("device", device.getJSONObject());
-
-		return jsonException;
-	}
 
 	public String getType() {
 		return type;
