@@ -28,6 +28,7 @@ import flee_and_catch.backend.communication.command.szenario.SzenarioAdapter;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.controller.SzenarioController;
+import flee_and_catch.backend.view.ViewController;
 
 public class Interpreter {
 
@@ -110,6 +111,8 @@ public class Interpreter {
 					client.setIdentification(command.getIdentification());
 					client.setDevice(app);
 					AppController.addNew(app);
+					//Set number of robots in view:
+					ViewController.setNumberOfApps(AppController.getApps().size());
 					break;
 				case Robot:
 					Robot robot = (Robot)command.getDevice();
@@ -118,6 +121,8 @@ public class Interpreter {
 					client.setIdentification(command.getIdentification());
 					client.setDevice(robot);
 					RobotController.addNew(robot);
+					//Set number of robots in view:
+					ViewController.setNumberOfRobots(RobotController.getRobots().size());
 					break;
 				default:
 					throw new Exception("Undefined connection");
@@ -136,26 +141,33 @@ public class Interpreter {
 					//Remove app
 					for(int i=0; i<AppController.getApps().size(); i++){
 						if(AppController.getApps().get(i).getIdentification().getId() == command.getIdentification().getId()){
-							App app = new App(AppController.getApps().get(i));
+							//App app = new App(AppController.getApps().get(i));
+							App app = AppController.getApps().get(i);
 							AppController.remove(app);
 							break;
 						}
 					}
+					System.out.println("Disconnect " + AppController.getApps().size());
+					//Set number of robots in view:
+					ViewController.setNumberOfApps(AppController.getApps().size());
 					break;
 				case Robot:			
 					//Remove robot
 					for(int i=0; i<RobotController.getRobots().size(); i++){
 						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getIdentification().getId()){
-							Robot robot = new Robot(RobotController.getRobots().get(i));
+							//Robot robot = new Robot(RobotController.getRobots().get(i));
+							Robot robot = RobotController.getRobots().get(i);
 							RobotController.remove(robot);
 							break;
 						}
 					}
+					//Set number of robots in view:
+					ViewController.setNumberOfRobots(RobotController.getRobots().size());
 					break;
 				default:
 					throw new Exception("Undefined disconnection");
 				}
-				Server.removeClient(client);				
+				Server.removeClient(client);
 				return;
 			default:
 				throw new Exception("Argument out of range");
