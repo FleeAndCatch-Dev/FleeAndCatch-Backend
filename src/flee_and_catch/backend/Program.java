@@ -1,8 +1,6 @@
 package flee_and_catch.backend;
+
 import java.io.IOException;
-
-import com.sun.glass.ui.View;
-
 import flee_and_catch.backend.communication.Server;
 import flee_and_catch.backend.view.ViewController;
 

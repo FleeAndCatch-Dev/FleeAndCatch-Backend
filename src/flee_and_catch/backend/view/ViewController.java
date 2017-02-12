@@ -5,6 +5,7 @@ package flee_and_catch.backend.view;
 import flee_and_catch.backend.view.stage.MainStageController;
 import javafx.application.Platform;
 
+
 public class ViewController {
 	
 //### STATIC VARIABLES #####################################################################################################################
@@ -123,6 +124,55 @@ public class ViewController {
 		}});
 	}
 	
+	public static void increaseNoOfSyncPackages() {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+		
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.increaseNoOfSyncPackages();
+		}});
+		
+	}
+	
+	public static void increaseNoOfControlPackages() {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+		
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.increaseNoOfControlPackages();
+		}});
+		
+	}
+	
+	public static void increaseNoOfScenarioPackages() {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+		
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.increaseNoOfScenarioPackages();
+		}});
+		
+	}
+	
+	public static void increaseNoOfConnectPackages() {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+		
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.increaseNoOfConnectPackages();
+		}});
+		
+	}
+	
+	public static void increaseNoOfDisconnectPackages() {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+		
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.increaseNoOfDisconnectPackages();
+		}});
+		
+	}
 	
 //##########################################################################################################################################
 }

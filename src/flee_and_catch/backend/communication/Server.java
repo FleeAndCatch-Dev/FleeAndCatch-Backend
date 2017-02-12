@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
@@ -77,7 +76,6 @@ public final class Server {
 		if(!opened){
 			port = Default.port;
 			serverSocket = new ServerSocket(port);
-			
 			//Set backend infos:
 			
 			ViewController.setBackendIPAddress(Server.getHostAddresses()[0]);
@@ -140,6 +138,7 @@ public final class Server {
 	 * @author ThunderSL94
 	 */
 	private static void listen() throws IOException {
+		
 		opened = true;
 		while(opened){
 			//Set status message 
@@ -147,6 +146,9 @@ public final class Server {
 			ViewController.setStatus(Status.Waiting);;
 			
 			final Socket socket = serverSocket.accept();
+			socket.setTcpNoDelay(true);
+			socket.setKeepAlive(true);
+			
 			final int id = generateNewClientId();
 			Thread clientThread = new Thread(new Runnable() {
 				

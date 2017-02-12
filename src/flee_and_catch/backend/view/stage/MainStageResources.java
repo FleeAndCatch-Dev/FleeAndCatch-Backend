@@ -4,6 +4,8 @@ package flee_and_catch.backend.view.stage;
 
 import java.io.File;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.scene.image.Image;
 
 public class MainStageResources {
@@ -30,6 +32,9 @@ public class MainStageResources {
 	String triAllRobotsText;
 	String triAllAppsText;
 	String triScenariosText;
+	String triAppText;
+	String triRobotText;
+	String triScenarioText;
 	//Menu bar texts:
 	String mnuProgramText;
 	String mniExitText;
@@ -37,6 +42,11 @@ public class MainStageResources {
 	String stbMsgScanning;
 	String stbMsgDeviceConnected;
 	String stbMsgDeviceDisconnected;
+	StringProperty lblStbPackagesConnectValue;
+	StringProperty lblStbPackagesDisconnectValue;
+	StringProperty lblStbPackagesSyncValue;
+	StringProperty lblStbPackagesControlValue;
+	StringProperty lblStbPackagesScenarioValue;
 	//Dialog texts:
 	String cpdTitle;
 	String cpdHeaderText;
@@ -69,6 +79,11 @@ public class MainStageResources {
 	Image scanningIcon16x16;
 	Image connectedIcon16x16;
 	Image disconnectedIcon16x16;
+	Image packagesConnectIcon16x16;
+	Image packagesDisconnectIcon16x16;
+	Image packagesSyncIcon16x16;
+	Image packagesControlIcon16x16;
+	Image packagesScenarioIcon16x16;
 	Image facLogo120x120;
 	
 	//### Files ################################################################################
@@ -100,6 +115,9 @@ public class MainStageResources {
 		this.triAllRobotsText   = "Robots";
 		this.triAllAppsText     = "Apps";
 		this.triScenariosText   = "Scenarios";
+		this.triAppText         = "App ID: ";
+		this.triRobotText       = "Robot ID: ";
+		this.triScenarioText    = "Scenario ID: ";
 		//Menu bar texts:
 		this.mnuProgramText     = "Program";
 		this.mniExitText        = "Exit";
@@ -107,6 +125,11 @@ public class MainStageResources {
 		this.stbMsgScanning     = "Waiting for Devices...";
 		this.stbMsgDeviceConnected = "New device has been connected!";
 		this.stbMsgDeviceDisconnected = "Device has been disconnected!";
+		this.lblStbPackagesConnectValue = new SimpleStringProperty("0");
+		this.lblStbPackagesDisconnectValue = new SimpleStringProperty("0");
+		this.lblStbPackagesSyncValue = new SimpleStringProperty("0");
+		this.lblStbPackagesControlValue = new SimpleStringProperty("0");
+		this.lblStbPackagesScenarioValue = new SimpleStringProperty("0");
 		
 		//Close-Dialog-Texts:
 		this.cpdTitle           = "Flee and Catch - Backend";
@@ -139,6 +162,11 @@ public class MainStageResources {
 		this.connectedIcon16x16      = new Image("icons/connected16x16.png");
 		this.disconnectedIcon16x16   = new Image("icons/disconnected16x16.png");
 		this.scanningIcon16x16       = new Image("icons/scanning16x16.png");
+		this.packagesConnectIcon16x16  = new Image("icons/packageConnect16x16.png");
+		this.packagesDisconnectIcon16x16  = new Image("icons/packageDisconnect16x16.png");
+		this.packagesSyncIcon16x16   = new Image("icons/packageSync16x16.png");
+		this.packagesControlIcon16x16   = new Image("icons/packageControl16x16.png");
+		this.packagesScenarioIcon16x16   = new Image("icons/packageScenario16x16.png");
 		this.facLogo120x120          = new Image("images/logo120x120.png");
 		
 		

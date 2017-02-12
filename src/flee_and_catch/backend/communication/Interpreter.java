@@ -102,6 +102,7 @@ public class Interpreter {
 		
 		switch(type){
 			case Connect:
+				ViewController.increaseNoOfConnectPackages();
 				//Set id and update object instances
 				switch (IdentificationType.valueOf(command.getIdentification().getType())) {
 				case App:		
@@ -132,6 +133,7 @@ public class Interpreter {
 				Server.sendCmd(client, gson.toJson(command));
 				return;
 			case Disconnect:
+				ViewController.increaseNoOfDisconnectPackages();
 				Gson gson1 = new Gson();
 				ConnectionCommand cmd = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Disconnect.toString(), client.getIdentification(), command.getDevice());				
 				Server.sendCmd(client, gson1.toJson(cmd));
@@ -186,6 +188,8 @@ public class Interpreter {
 	private void synchronization(JSONObject pCommand) throws Exception{		
 		SynchronizationCommand command = gson.fromJson(pCommand.toString(), SynchronizationCommand.class);
 		SynchronizationCommandType type = SynchronizationCommandType.valueOf(command.getType());
+		
+		ViewController.increaseNoOfSyncPackages();
 		
 		switch(type){
 			case All:
@@ -248,6 +252,8 @@ public class Interpreter {
 		Gson localgson = builder.create();			
 		SzenarioCommand command = localgson.fromJson(pCommand.toString(), SzenarioCommand.class);
 		
+		ViewController.increaseNoOfScenarioPackages();
+		
 		SzenarioCommandType type = SzenarioCommandType.valueOf(command.getType());
 		
 		switch (type) {
@@ -276,6 +282,8 @@ public class Interpreter {
 	 */
 	private void szenarioControl(SzenarioCommand pCommand) throws Exception{
 		ControlType type = ControlType.valueOf(pCommand.getSzenario().getSzenariotype());
+		
+		ViewController.increaseNoOfControlPackages();
 		
 		//Szenario control command from App
 		Client localclient = null;

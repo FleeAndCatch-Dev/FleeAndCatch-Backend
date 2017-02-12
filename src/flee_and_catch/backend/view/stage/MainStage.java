@@ -9,6 +9,7 @@ import javafx.animation.PauseTransition;
 import javafx.animation.RotateTransition;
 import javafx.animation.SequentialTransition;
 import javafx.animation.Transition;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
@@ -20,7 +21,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.ImageView;
@@ -29,6 +30,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
@@ -56,7 +58,13 @@ public class MainStage extends Stage {
 	SequentialTransition sqtWaiting;
 	RotateTransition rttConnected;
 	RotateTransition rttDisconnected;
-	Label     lblStatusBarTime;
+	HBox      hbxStbPackagesInfo;
+	Label     lblStbPackagesSync;
+	Label     lblStbPackagesControl;
+	Label     lblStbPackagesScenario;
+	Label     lblStbPackagesConnect;
+	Label     lblStbPackagesDisconnect;
+	Label     lblStbTime;
 	//Main pane for the content of the view:
 	GridPane gdpMainPane;
 	
@@ -79,7 +87,7 @@ public class MainStage extends Stage {
 	
 	TitledBorderPane tbpDeviceInfo;
 	GridPane gdpDeviceInfo;
-	TextField txfDeviceInfo;
+	TextArea txaDeviceInfo;
 	ScrollPane scpDeviceTreePane;
 	TreeView<String> trvDeviceTree;
 	TreeItem<String> triDevices;
@@ -93,11 +101,12 @@ public class MainStage extends Stage {
 	public MainStage(
 			MainStageResources res, 
 			EventHandler<ActionEvent>	aeh,
+			ChangeListener<Object>      ceh,
 			EventHandler<MouseEvent>  	meh,
 			EventHandler<KeyEvent>    	keh, 
 			EventHandler<WindowEvent> 	weh) {
 		
-		this.initComponents(res, aeh, meh, keh);
+		this.initComponents(res, aeh, ceh, meh, keh);
 		this.structureComponents();
 		this.initStage(res, weh);
 	}
@@ -107,6 +116,7 @@ public class MainStage extends Stage {
 	private void initComponents(		
 			MainStageResources res, 
 			EventHandler<ActionEvent>	aeh,
+			ChangeListener<Object>      ceh,
 			EventHandler<MouseEvent>  	meh,
 			EventHandler<KeyEvent>    	keh) {
 		
@@ -132,27 +142,41 @@ public class MainStage extends Stage {
 		this.sqtWaiting.setCycleCount(Transition.INDEFINITE);
 		this.sqtWaiting.setDelay(Duration.millis(600));
 		
-		this.rttConnected = new RotateTransition(Duration.millis(1500), this.imvConnected);
+		this.rttConnected = new RotateTransition(Duration.millis(1600), this.imvConnected);
 		this.rttConnected.setByAngle(360);
 		this.rttConnected.setCycleCount(1);
 		this.rttConnected.setDelay(Duration.millis(100));
 		this.rttConnected.setAxis(Rotate.Y_AXIS);
 		this.rttConnected.setOnFinished(aeh);
 		
-		this.rttDisconnected = new RotateTransition(Duration.millis(1500), this.imvDisconnected);
+		this.rttDisconnected = new RotateTransition(Duration.millis(1600), this.imvDisconnected);
 		this.rttDisconnected.setByAngle(360);
 		this.rttDisconnected.setCycleCount(1);
 		this.rttDisconnected.setDelay(Duration.millis(100));
 		this.rttDisconnected.setAxis(Rotate.Y_AXIS);
 		this.rttDisconnected.setOnFinished(aeh);
 		
-		this.lblStatusBarTime = new Label();
-		this.lblStatusBarTime.setGraphic(new ImageView(res.clockIcon16x16));
+		this.lblStbTime = new Label();
+		this.lblStbTime.setGraphic(new ImageView(res.clockIcon16x16));
+		
+		this.hbxStbPackagesInfo = new HBox(15);
+		this.hbxStbPackagesInfo.setPadding(new Insets(0,20,0,20));
+		
+		this.lblStbPackagesConnect = new Label();
+		this.lblStbPackagesConnect.setGraphic(new ImageView(res.packagesConnectIcon16x16));
+		this.lblStbPackagesDisconnect = new Label();
+		this.lblStbPackagesDisconnect.setGraphic(new ImageView(res.packagesDisconnectIcon16x16));
+		this.lblStbPackagesSync = new Label();
+		this.lblStbPackagesSync.setGraphic(new ImageView(res.packagesSyncIcon16x16));
+		this.lblStbPackagesControl = new Label();
+		this.lblStbPackagesControl.setGraphic(new ImageView(res.packagesControlIcon16x16));
+		this.lblStbPackagesScenario = new Label();
+		this.lblStbPackagesScenario.setGraphic(new ImageView(res.packagesScenarioIcon16x16));
 		
 		this.gdpMainPane = new GridPane();
 		this.gdpMainPane.setPadding(new Insets(20,15,15,15));
 		this.gdpMainPane.setVgap(20);
-		
+
 		//### Backend information ##################################################################
 		
 		this.tbpBackendInfo    = new TitledBorderPane(res.tbpBackendInfoText);
@@ -206,21 +230,22 @@ public class MainStage extends Stage {
 		colDI2.setHalignment(HPos.RIGHT);
 		this.gdpBackendInfo.getColumnConstraints().addAll(colDI1, colDI2);
 		
-		this.txfDeviceInfo = new TextField();
-		this.txfDeviceInfo.setPrefWidth(10000);
-		this.txfDeviceInfo.setPrefHeight(1000);
-		this.txfDeviceInfo.setEditable(false);
-		this.txfDeviceInfo.setStyle("-fx-background-image: url(\"images/logo120x120.png\");" +
-				"-fx-background-repeat: stretch;" +
-				"-fx-background-size: 120 120;" +
-				"-fx-background-position: center center;");
+		this.txaDeviceInfo = new TextArea();
+		this.txaDeviceInfo.setId("txaDeviceInfo");
+		this.txaDeviceInfo.setPrefWidth(10000);
+		this.txaDeviceInfo.setPrefHeight(10000);
+		this.txaDeviceInfo.setEditable(false);
 		this.scpDeviceTreePane = new ScrollPane();
 		this.scpDeviceTreePane.setHbarPolicy(ScrollBarPolicy.NEVER);
 		this.scpDeviceTreePane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+		this.scpDeviceTreePane.setPrefHeight(10000);
 		this.scpDeviceTreePane.setMinWidth(200);
 		this.scpDeviceTreePane.setPrefWidth(200);
 		
 		this.trvDeviceTree = new TreeView<String>();
+		this.trvDeviceTree.setPrefHeight(10000);
+		this.trvDeviceTree.setPrefWidth(200);
+		this.trvDeviceTree.getSelectionModel().selectedItemProperty().addListener(ceh);
 		this.triDevices = new TreeItem<String>(res.triDevicesText + " (0)");
 		this.triDevices.setGraphic(new ImageView(res.deviceIcon16x16));
 		this.triAll = new TreeItem<String>(res.triAllText + " (0)");
@@ -264,7 +289,7 @@ public class MainStage extends Stage {
 		//Add tree view to scroll pane:
 		this.scpDeviceTreePane.setContent(this.trvDeviceTree);
 		//Add text field and scroll pane to grid pane:
-		this.gdpDeviceInfo.add(this.txfDeviceInfo, 0, 0);
+		this.gdpDeviceInfo.add(this.txaDeviceInfo, 0, 0);
 		this.gdpDeviceInfo.add(this.scpDeviceTreePane, 1, 0);
 		//Add grid pane to titled border pane:
 		this.tbpDeviceInfo.setContent(this.gdpDeviceInfo);
@@ -281,7 +306,13 @@ public class MainStage extends Stage {
 		this.mnbMenuBar.getMenus().add(this.mnuProgram);
 		
 		//Setup status bar:
-		this.stbStatusBar.getRightItems().add(this.lblStatusBarTime);
+		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesSync);
+		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesControl);
+		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesScenario);
+		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesConnect);
+		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesDisconnect);
+		this.stbStatusBar.getRightItems().add(this.hbxStbPackagesInfo);
+		this.stbStatusBar.getRightItems().add(this.lblStbTime);
 		//Add main pane / menu bar / status bar to root pane:
 		this.bdpRootPane.setTop(this.mnbMenuBar);
 		this.bdpRootPane.setBottom(this.stbStatusBar);
@@ -293,7 +324,7 @@ public class MainStage extends Stage {
 		
 		//Create scene and set their properties:
 		this.scene = new Scene(this.bdpRootPane, 700, 500);
-		
+		this.scene.getStylesheets().add(MainStage.class.getResource("MainStageCSS.css").toExternalForm());;
 		//Set stage properties:
 		this.setScene(this.scene);
 		this.setTitle(res.stageTitle);
@@ -313,7 +344,12 @@ public class MainStage extends Stage {
 	public void adjustComponents() {
 		this.tbpBackendInfo.adjustTitleSize();
 		this.tbpDeviceInfo.adjustTitleSize();
-		this.lblStatusBarTime.setTranslateY(4.0);	//Needed because status bar set label not in the middle!
+		this.lblStbTime.setTranslateY(4.0);	//Needed because status bar set label not in the middle!
+		this.lblStbPackagesConnect.setTranslateY(4.0);	//Needed because status bar set label not in the middle!
+		this.lblStbPackagesDisconnect.setTranslateY(4.0);
+		this.lblStbPackagesSync.setTranslateY(4.0);
+		this.lblStbPackagesControl.setTranslateY(4.0);
+		this.lblStbPackagesScenario.setTranslateY(4.0);
 	}
 	
 //##########################################################################################################################################

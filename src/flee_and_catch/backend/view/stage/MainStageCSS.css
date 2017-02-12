@@ -1,0 +1,7 @@
+#txaDeviceInfo .scroll-pane .content{
+    -fx-background-color: rgba(255, 255, 255, 1);
+	-fx-background-image: url("../../../../../res/images/logo120x120.png");
+	-fx-background-repeat: stretch;
+	-fx-background-size: 120 120;
+	-fx-background-position: center center;
+}

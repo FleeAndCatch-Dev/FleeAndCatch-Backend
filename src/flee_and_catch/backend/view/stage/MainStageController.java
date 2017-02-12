@@ -4,15 +4,26 @@ package flee_and_catch.backend.view.stage;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
+import flee_and_catch.backend.communication.Client;
+import flee_and_catch.backend.communication.Server;
+import flee_and_catch.backend.communication.command.device.app.App;
+import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.controller.AppController;
+import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.view.Status;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.media.Media;
@@ -35,6 +46,7 @@ public class MainStageController {
 	private	MainStage 			view;		//View!
 	private MainStageResources 	res;		//Resources for the view
 	private ActionEventHandler 	aeh;		//Handler for action events (e.g. clicks) on the view!
+	private ChangeEventHandler  ceh;
 	private MouseEventHandler   meh;		//Handler for mouse events (e.g. mouse movement) on the view!
 	private KeyEventHandler 	keh;		//Handler for key events (e.g. keypress) on view!
 	private WindowEventHandler 	weh;		//Handler for window events (e.g. close over cross) on view!
@@ -60,6 +72,7 @@ public class MainStageController {
 		this.res = new MainStageResources();
 		//Initialize the action event handler for the view:
 		this.aeh = new ActionEventHandler();
+		this.ceh = new ChangeEventHandler();
 		//Initialize the mouse event handler for the view:
 		this.meh = new MouseEventHandler();
 		//Initialize the key event handler for the view:
@@ -67,7 +80,7 @@ public class MainStageController {
 		//Initialize the window event handler for the view:
 		this.weh = new WindowEventHandler();
 		//Initialize the view:
-		this.view = new MainStage(res, aeh, meh, keh, weh);
+		this.view = new MainStage(res, aeh, ceh, meh, keh, weh);
 
 		this.stt = new ShowTimeThread();
 		this.sst = new ShowStatusThread();
@@ -82,9 +95,13 @@ public class MainStageController {
 		MainStageController.inizialized = true;
 	}
 	
-	
 	private void initBindings() {
 		
+		this.view.lblStbPackagesSync.textProperty().bind(this.res.lblStbPackagesSyncValue);
+		this.view.lblStbPackagesControl.textProperty().bind(this.res.lblStbPackagesControlValue);
+		this.view.lblStbPackagesScenario.textProperty().bind(this.res.lblStbPackagesScenarioValue);
+		this.view.lblStbPackagesConnect.textProperty().bind(this.res.lblStbPackagesConnectValue);
+		this.view.lblStbPackagesDisconnect.textProperty().bind(this.res.lblStbPackagesDisconnectValue);
 	}
 	
 //### EVENT HANDLER ########################################################################################################################
@@ -112,6 +129,32 @@ public class MainStageController {
 			else if(src == MainStageController.this.view.rttDisconnected) {
 				MainStageController.this.curState = Status.Nothing;
 				MainStageController.this.proStates.remove(0);
+			}
+			
+		}
+		
+	}
+	
+	/* ChangeEventHandler [class]: Class that implements an change listener that handles all component changes of the view *//**
+	 * 
+	 * @author mbothner
+	 *
+	 */
+	private class ChangeEventHandler implements ChangeListener<Object> {
+
+		@Override
+		public void changed(ObservableValue<?> arg0, Object arg1, Object arg2) {
+			
+			TreeItem<String> curItem = MainStageController.this.view.trvDeviceTree.getSelectionModel().getSelectedItem();
+			
+			if(Pattern.matches(res.triAppText + "[0-9]+", curItem.getValue())) {
+				MainStageController.this.showAppInfo(Integer.parseInt(curItem.getValue().substring(8)));
+			}
+			else if(Pattern.matches(res.triRobotText+ "[0-9]+", curItem.getValue())) {
+				MainStageController.this.showRobotInfo(Integer.parseInt(curItem.getValue().substring(10)));
+			}
+			else {
+				MainStageController.this.clearInfo();
 			}
 		}
 		
@@ -184,7 +227,7 @@ public class MainStageController {
 				Platform.runLater(new Runnable() { @Override public void run() {
 					Date date = new Date();
 					String time = date.toString().substring(11, 19);
-					MainStageController.this.view.lblStatusBarTime.setText(time);
+					MainStageController.this.view.lblStbTime.setText(time);
 				}});
 				try {
 					Thread.sleep(100);
@@ -267,6 +310,75 @@ public class MainStageController {
 		}
 	}
 	
+	private void showAppInfo(int deviceID) {
+		
+		String infoText = "Device Info:\n";
+		
+		for(App app : AppController.getApps()) {
+			if(app.getIdentification().getId() == deviceID) {
+				infoText += "ID: " + app.getIdentification().getId() + "\n";
+				infoText += "Type: " + app.getIdentification().getType() + "\n";
+				infoText += "Roletype: " + app.getIdentification().getRoletype() + "\n";
+			}
+		}
+		for(Client client : Server.getClients()) {
+			if(client.getIdentification().getId() == deviceID) {
+				infoText += "Active: " + client.getDevice().isActive() + "\n";
+				//infoText += "Address: " + client.getIdentification().getAddress() + "\n";
+				int index = client.getSocket().getRemoteSocketAddress().toString().indexOf(":");
+				infoText += "Address: " + client.getSocket().getRemoteSocketAddress().toString().substring(1, index) + "\n";
+				//infoText += "Port: " + client.getIdentification().getPort() + "\n";
+				infoText += "Port: " + client.getSocket().getPort() + "\n";
+				if(client.getSzenario() == null) {
+					infoText += "Scenario-ID: No Scenario\n";
+					infoText += "Scenario-Type: No Scenario\n";
+				}
+				else {
+					infoText += "Scenario-ID: " + client.getSzenario().getSzenarioid() + "\n";
+					infoText += "Scenario-Type: " + client.getSzenario().getSzenariotype() + "\n";
+				}
+			}
+		}
+		this.view.txaDeviceInfo.setText(infoText);
+	}
+	
+	private void showRobotInfo(int deviceID) {
+		
+		String infoText = "Device Info:\n";
+		
+		for(Robot robot : RobotController.getRobots()) {
+			if(robot.getIdentification().getId() == deviceID) {
+				infoText += "ID: " + robot.getIdentification().getId() + "\n";
+				infoText += "Type: " + robot.getIdentification().getType() + "\n";
+				infoText += "Subtype: " + robot.getIdentification().getSubtype() + "\n";
+				infoText += "Role: " + robot.getIdentification().getRole() + "\n";
+			}
+		}
+		for(Client client : Server.getClients()) {
+			if(client.getIdentification().getId() == deviceID) {
+				infoText += "Active: " + client.getDevice().isActive() + "\n";
+				//infoText += "Address: " + client.getIdentification().getAddress() + "\n";
+				int index = client.getSocket().getRemoteSocketAddress().toString().indexOf(":");
+				infoText += "Address: " + client.getSocket().getRemoteSocketAddress().toString().substring(1, index) + "\n";
+				//infoText += "Port: " + client.getIdentification().getPort() + "\n";
+				infoText += "Port: " + client.getSocket().getPort() + "\n";
+				if(client.getSzenario() == null) {
+					infoText += "Scenario-ID: No Scenario\n";
+					infoText += "Scenario-Type: No Scenario\n";
+				}
+				else {
+					infoText += "Scenario-ID: " + client.getSzenario().getSzenarioid() + "\n";
+					infoText += "Scenario-Type: " + client.getSzenario().getSzenariotype() + "\n";
+				}
+			}
+		}
+		this.view.txaDeviceInfo.setText(infoText);
+	}
+	
+	private void clearInfo() {
+		this.view.txaDeviceInfo.setText("");
+	}
+	
 //### PUBLIC STATIC METHODS ################################################################################################################
 	
 	/* getInstance [method]: Fabric method to (create and) returns the singleton object of the class */
@@ -305,16 +417,38 @@ public class MainStageController {
 	
 	public void setNumberOfDevices(int devices) {
 		this.view.lblDevicesValue.setText(String.valueOf(devices));
+		this.view.triDevices.setValue(this.res.triDevicesText + " (" + devices + ")");
+		this.view.triAll.setValue(this.res.triDevicesText + " (" + devices + ")");
 	}
 	
 	public void setNumberOfApps(int apps) {
 		this.view.lblAppsValue.setText(String.valueOf(apps));
+		this.view.triAllApps.setValue(this.res.triAllAppsText + " (" + apps + ")");
+		
+		List<App> applist = (ArrayList<App>) AppController.getApps();
+		
+		this.view.triAllApps.getChildren().clear();
+			
+		for(App app : applist) {
+			TreeItem<String> triApp = new TreeItem<String>(res.triAppText + app.getIdentification().getId());
+			this.view.triAllApps.getChildren().add(triApp);
+		}
 		
 	}
 
 	public void setNumberOfRobots(int robots) {
 		this.view.lblRobotsValue.setText(String.valueOf(robots));
+		this.view.triAllRobots.setValue(this.res.triAllRobotsText + " (" + robots + ")");
 		
+		List<Robot> robotlist = (ArrayList<Robot>) RobotController.getRobots();
+		
+		this.view.triAllRobots.getChildren().clear();
+			
+		for(Robot robot : robotlist) {
+			TreeItem<String> triRobot = new TreeItem<String>(res.triRobotText + robot.getIdentification().getId());
+			triRobot.addEventHandler(ActionEvent.ACTION, this.aeh);
+			this.view.triAllRobots.getChildren().add(triRobot);
+		}
 	}
 	
 	public void setStatus(Status status) {
@@ -349,7 +483,35 @@ public class MainStageController {
 		this.view.rttDisconnected.play();
 	}
 
-
+	public void increaseNoOfSyncPackages() {
+		int noOfSP = Integer.parseInt(this.res.lblStbPackagesSyncValue.getValue());
+		noOfSP++;
+		this.res.lblStbPackagesSyncValue.setValue(String.valueOf(noOfSP));
+	}
+	
+	public void increaseNoOfControlPackages() {
+		int noOfCP = Integer.parseInt(this.res.lblStbPackagesControlValue.getValue());
+		noOfCP++;
+		this.res.lblStbPackagesControlValue.setValue(String.valueOf(noOfCP));
+	}
+	
+	public void increaseNoOfScenarioPackages() {
+		int noOfSP = Integer.parseInt(this.res.lblStbPackagesScenarioValue.getValue());
+		noOfSP++;
+		this.res.lblStbPackagesScenarioValue.setValue(String.valueOf(noOfSP));
+	}
+	
+	public void increaseNoOfConnectPackages() {
+		int noOfCP = Integer.parseInt(this.res.lblStbPackagesConnectValue.getValue());
+		noOfCP++;
+		this.res.lblStbPackagesConnectValue.setValue(String.valueOf(noOfCP));
+	}
+	
+	public void increaseNoOfDisconnectPackages() {
+		int noOfDP = Integer.parseInt(this.res.lblStbPackagesDisconnectValue.getValue());
+		noOfDP++;
+		this.res.lblStbPackagesDisconnectValue.setValue(String.valueOf(noOfDP));
+	}
 	
 //##########################################################################################################################################	
 }
