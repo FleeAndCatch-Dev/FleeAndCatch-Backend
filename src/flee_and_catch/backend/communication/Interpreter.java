@@ -1,5 +1,6 @@
 package flee_and_catch.backend.communication;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import org.json.JSONObject;
 
@@ -192,10 +193,11 @@ public class Interpreter {
 		switch (type) {
 		case AllRobots:	
 			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
-				SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.AllRobots.toString(), client.getIdentification(), SzenarioController.getSzenarios(), RobotController.getRobots());
+				SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.AllRobots.toString(), client.getIdentification(), new ArrayList<Szenario>(), RobotController.getRobots());
 				Server.sendCmd(client, gson.toJson(cmd));
+				return;
 			}
-			return;
+			throw new Exception("A robot can not get a list of robots");
 		case CurrentRobot:
 			//New update from a robot
 			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot){
@@ -228,7 +230,12 @@ public class Interpreter {
 			}
 			return;
 		case AllSzenarios:
-			return;
+			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
+				SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.AllSzenarios.toString(), client.getIdentification(), SzenarioController.getSzenarios(), new ArrayList<Robot>());
+				Server.sendCmd(client, gson.toJson(cmd));
+				return;
+			}
+			throw new Exception("A robot can not get a list of szenarios");
 		case CurrentSzenario:
 			return;
 		default:
@@ -288,7 +295,7 @@ public class Interpreter {
 	 * @author ThunderSL94
 	 */
 	private void szenarioControl(SzenarioCommand pCommand) throws Exception{
-		ControlType type = ControlType.valueOf(pCommand.getSzenario().getType());
+		ControlType type = ControlType.valueOf(pCommand.getSzenario().getCommand());
 		
 		ViewController.increaseNoOfControlPackages();
 		
@@ -370,8 +377,8 @@ public class Interpreter {
 				throw new Exception("Argument out of range");
 		}
 		Control control = (Control) pCommand.getSzenario();
-		ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getType(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
-		if(localclient != null && type != ControlType.Init){
+		ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
+		if(localclient != null){
 			Server.sendCmd(localclient, gson.toJson(cmd));
 		}
 	}

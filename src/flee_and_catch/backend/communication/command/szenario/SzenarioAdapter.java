@@ -10,7 +10,7 @@ import com.google.gson.JsonParseException;
 public class SzenarioAdapter implements JsonDeserializer<Szenario> {
 	@Override
 	public Szenario deserialize(JsonElement json, Type szenario, JsonDeserializationContext context) throws JsonParseException {
-		String myType = json.getAsJsonObject().get("szenarioid").getAsString();
+		String myType = json.getAsJsonObject().get("type").getAsString();
         switch (myType) {
             case "Control": return context.deserialize(json, Control.class);
             default: return null;
