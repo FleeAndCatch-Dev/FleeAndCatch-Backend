@@ -128,15 +128,13 @@ public class Interpreter {
 				default:
 					throw new Exception("Undefined connection");
 				}	
-				Gson gson = new Gson();
 				command = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Connect.toString(), client.getIdentification(), client.getDevice());
 				Server.sendCmd(client, gson.toJson(command));
 				return;
 			case Disconnect:
 				ViewController.increaseNoOfDisconnectPackages();
-				Gson gson1 = new Gson();
 				ConnectionCommand cmd = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Disconnect.toString(), client.getIdentification(), command.getDevice());				
-				Server.sendCmd(client, gson1.toJson(cmd));
+				Server.sendCmd(client, gson.toJson(cmd));
 				IdentificationType clienttype = IdentificationType.valueOf(command.getIdentification().getType());
 				switch(clienttype){
 				case App:
@@ -191,48 +189,50 @@ public class Interpreter {
 		
 		ViewController.increaseNoOfSyncPackages();
 		
-		switch(type){
-			case All:
-				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
-					Gson gson = new Gson();
-					SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.All.toString(), client.getIdentification(), RobotController.getRobots());
-					Server.sendCmd(client, gson.toJson(cmd));
+		switch (type) {
+		case AllRobots:	
+			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
+				SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.AllRobots.toString(), client.getIdentification(), SzenarioController.getSzenarios(), RobotController.getRobots());
+				Server.sendCmd(client, gson.toJson(cmd));
+			}
+			return;
+		case CurrentRobot:
+			//New update from a robot
+			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot){
+				//Get the szenario of the robot
+				Szenario szenario = null;
+				for(int i=0;i<SzenarioController.getSzenarios().size();i++){
+					for(int j=0;j<SzenarioController.getSzenarios().get(i).getRobots().size();j++){
+						if(SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId() == command.getIdentification().getId()){
+							szenario = SzenarioController.getSzenarios().get(i);
+							break;
+						}
+					}
 				}
-				return;
-			case Current:
-				//New update from a robot
-				if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot){
-					//Get the szenario of the robot
-					Szenario szenario = null;
-					for(int i=0;i<SzenarioController.getSzenarios().size();i++){
-						for(int j=0;j<SzenarioController.getSzenarios().get(i).getRobots().size();j++){
-							if(SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId() == command.getIdentification().getId()){
-								szenario = SzenarioController.getSzenarios().get(i);
+				if(szenario != null){
+					for(int i=0;i<szenario.getApps().size();i++){
+						//Get the client for the app
+						Client localclient = null;
+						for(int j=0;j<Server.getClients().size();j++){
+							if(szenario.getApps().get(i).getIdentification().getId() == Server.getClients().get(j).getIdentification().getId()){
+								localclient = Server.getClients().get(j);
 								break;
 							}
 						}
-					}
-					if(szenario != null){
-						for(int i=0;i<szenario.getApps().size();i++){
-							//Get the client for the app
-							Client localclient = null;
-							for(int j=0;j<Server.getClients().size();j++){
-								if(szenario.getApps().get(i).getIdentification().getId() == Server.getClients().get(j).getIdentification().getId()){
-									localclient = Server.getClients().get(j);
-									break;
-								}
-							}
-							if(localclient != null){
-								Gson gson = new Gson();
-								SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.Current.toString(), client.getIdentification(), command.getRobots());
-								Server.sendCmd(localclient, gson.toJson(cmd));
-							}
+						if(localclient != null){
+							SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.CurrentRobot.toString(), client.getIdentification(), command.getSzenarios(), command.getRobots());
+							Server.sendCmd(localclient, gson.toJson(cmd));
 						}
 					}
 				}
-				return;
-			default:
-				throw new Exception("Argument out of range");
+			}
+			return;
+		case AllSzenarios:
+			return;
+		case CurrentSzenario:
+			return;
+		default:
+			throw new Exception("Argument out of range");
 		}
 	}
 	
@@ -257,6 +257,13 @@ public class Interpreter {
 		SzenarioCommandType type = SzenarioCommandType.valueOf(command.getType());
 		
 		switch (type) {
+			case Init:
+				//Add the szenario and generate new id
+				Szenario szenario = SzenarioController.addNew(command.getSzenario());
+				
+				SzenarioCommand cmd = new SzenarioCommand(CommandType.Szenario.toString(), SzenarioCommandType.Init.toString(), client.getIdentification(), szenario);
+				Server.sendCmd(client, gson.toJson(cmd));
+				break;
 			case Control:
 				szenarioControl(command);
 				break;
@@ -281,7 +288,7 @@ public class Interpreter {
 	 * @author ThunderSL94
 	 */
 	private void szenarioControl(SzenarioCommand pCommand) throws Exception{
-		ControlType type = ControlType.valueOf(pCommand.getSzenario().getSzenariotype());
+		ControlType type = ControlType.valueOf(pCommand.getSzenario().getType());
 		
 		ViewController.increaseNoOfControlPackages();
 		
@@ -295,8 +302,7 @@ public class Interpreter {
 		}
 
 		switch (type) {
-			case Begin:
-				SzenarioController.addNew(pCommand.getSzenario());
+			case Begin:				
 				//Set devices active -> true
 				for(int i=0;i<pCommand.getSzenario().getRobots().size();i++){
 					RobotController.changeActive(pCommand.getSzenario().getRobots().get(i), true);
@@ -364,9 +370,8 @@ public class Interpreter {
 				throw new Exception("Argument out of range");
 		}
 		Control control = (Control) pCommand.getSzenario();
-		Gson gson = new Gson();
-		ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getSzenariotype(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
-		if(localclient != null){
+		ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getType(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
+		if(localclient != null && type != ControlType.Init){
 			Server.sendCmd(localclient, gson.toJson(cmd));
 		}
 	}

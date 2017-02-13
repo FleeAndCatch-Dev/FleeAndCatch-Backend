@@ -193,8 +193,9 @@ public final class Server {
 		
 		//Set status message:
 		ViewController.setStatus(Status.Connected);;
+		int index = pSocket.getRemoteSocketAddress().toString().indexOf(":");
 		
-		Client client = new Client(true, new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
+		Client client = new Client(true, new ClientIdentification(pId, pSocket.getRemoteSocketAddress().toString().substring(1, index), pSocket.getPort(), IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
 		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
 		clientList.add(client);
 		
@@ -334,8 +335,9 @@ public final class Server {
 	 * @author ThunderSL94
 	 */
 	public static int generateNewClientId() {
+		clientsLock.lock();
 		int result = 0;
-		ArrayList<Client> tmpclients = getClients();
+		ArrayList<Client> tmpclients = clients;
 		ArrayList<Client> sortclients = new ArrayList<Client>();
 		
 		for(int j=0; j<tmpclients.size(); j++){
@@ -348,13 +350,14 @@ public final class Server {
 			}
 		}
 		
-		if(sortclients.size() > 0)
-			setClients(sortclients);
+		if(sortclients.size() > 1)
+			clients = sortclients;
 		
 		for( int i=0; i<getClients().size(); i++) {
-			if(getClients().get(i).getIdentification().getId() == result)
+			if(clients.get(i).getIdentification().getId() == result)
 				result++;
 		}
+		clientsLock.unlock();
 		
 		return result;
 	}
@@ -466,15 +469,11 @@ public final class Server {
 			switch (type) {
 				case App:
 					App app = (App)client.getDevice();
-					ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
-					appList.remove(app);
-					AppController.setApps(appList);
+					AppController.remove(app);
 					break;
 				case Robot:
 					Robot robot = (Robot)client.getDevice();
-					ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
-					robotList.remove(robot);
-					RobotController.setRobots(robotList);
+					RobotController.remove(robot);
 					break;
 				default:
 					break;

@@ -334,8 +334,8 @@ public class MainStageController {
 					infoText += "Scenario-Type: No Scenario\n";
 				}
 				else {
-					infoText += "Scenario-ID: " + client.getSzenario().getSzenarioid() + "\n";
-					infoText += "Scenario-Type: " + client.getSzenario().getSzenariotype() + "\n";
+					infoText += "Scenario-Type: " + client.getSzenario().getType() + "\n";
+					infoText += "Scenario-Command: " + client.getSzenario().getCommand() + "\n";
 				}
 			}
 		}
@@ -367,8 +367,8 @@ public class MainStageController {
 					infoText += "Scenario-Type: No Scenario\n";
 				}
 				else {
-					infoText += "Scenario-ID: " + client.getSzenario().getSzenarioid() + "\n";
-					infoText += "Scenario-Type: " + client.getSzenario().getSzenariotype() + "\n";
+					infoText += "Scenario-Type: " + client.getSzenario().getType() + "\n";
+					infoText += "Scenario-Command: " + client.getSzenario().getCommand() + "\n";
 				}
 			}
 		}
