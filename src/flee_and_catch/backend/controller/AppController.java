@@ -23,6 +23,9 @@ public final class AppController {
 	}
 	
 	public static void addNew(App pApp){
+		//Set number of robots in view:
+		ViewController.setNumberOfApps(AppController.getApps().size());
+		
 		appsLock.lock();
 		apps.add(pApp);
 		appsLock.unlock();

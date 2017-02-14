@@ -21,6 +21,9 @@ public final class RobotController {
 	}
 	
 	public static void addNew(Robot pRobot){
+		//Set number of robots in view:
+		ViewController.setNumberOfRobots(RobotController.getRobots().size());
+		
 		robotsLock.lock();
 		robots.add(pRobot);
 		robotsLock.unlock();

@@ -48,4 +48,8 @@ public abstract class Szenario {
 	public ArrayList<Robot> getRobots() {
 		return robots;
 	}
+	public void setRobots(ArrayList<Robot> robots) {
+		this.robots = robots;
+	}
+	
 }
