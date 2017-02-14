@@ -148,9 +148,6 @@ public class Interpreter {
 							break;
 						}
 					}
-					System.out.println("Disconnect " + AppController.getApps().size());
-					//Set number of robots in view:
-					ViewController.setNumberOfApps(AppController.getApps().size());
 					break;
 				case Robot:			
 					//Remove robot
@@ -162,8 +159,6 @@ public class Interpreter {
 							break;
 						}
 					}
-					//Set number of robots in view:
-					ViewController.setNumberOfRobots(RobotController.getRobots().size());
 					break;
 				default:
 					throw new Exception("Undefined disconnection");

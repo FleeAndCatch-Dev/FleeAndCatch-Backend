@@ -6,6 +6,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import flee_and_catch.backend.communication.command.device.app.App;
+import flee_and_catch.backend.view.ViewController;
 
 public final class AppController {
 	private static ArrayList<App> apps = new ArrayList<App>();
@@ -28,6 +29,9 @@ public final class AppController {
 	}
 	
 	public static void remove(App pApp){
+		//Set number of robots in view:
+		ViewController.setNumberOfApps(AppController.getApps().size());
+		
 		appsLock.lock();
 		apps.remove(pApp);
 		appsLock.unlock();

@@ -5,6 +5,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.view.ViewController;
 
 public final class RobotController {
 	private static ArrayList<Robot> robots = new ArrayList<Robot>();
@@ -26,6 +27,9 @@ public final class RobotController {
 	}
 	
 	public static void remove(Robot pRobot){
+		//Set number of robots in view:
+		ViewController.setNumberOfRobots(RobotController.getRobots().size());
+		
 		robotsLock.lock();
 		robots.remove(pRobot);
 		robotsLock.unlock();
