@@ -47,11 +47,6 @@ public final class SzenarioController {
 		szenariosLock.unlock();
 	}
 	
-	public static int generateId(){
-		//generate new id for a szenario
-		return 0;
-	}
-	
 	public static ArrayList<Szenario> getSzenarios() {
 		szenariosLock.lock();
 		ArrayList<Szenario> szenarioList = new ArrayList<Szenario>(szenarios);

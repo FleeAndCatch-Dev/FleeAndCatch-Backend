@@ -377,8 +377,13 @@ public class Interpreter {
 					}
 				}
 				
-				//Remove szenario from controller
-				SzenarioController.remove(pCommand.getSzenario());
+				//Remove szenario
+				Szenario szenario = null;
+				for(int i=0;i<SzenarioController.getSzenarios().size();i++){
+					if(SzenarioController.getSzenarios().get(i).getId() == pCommand.getSzenario().getId())
+						szenario = SzenarioController.getSzenarios().get(i);
+				}
+				SzenarioController.remove(szenario);
 				break;
 			case Start:
 				//No implementation needed
