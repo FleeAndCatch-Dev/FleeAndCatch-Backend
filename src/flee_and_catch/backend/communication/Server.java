@@ -141,8 +141,6 @@ public final class Server {
 		
 		opened = true;
 		while(opened){
-			//Set status message 
-			System.out.println("Wait for clients ...");
 			ViewController.setStatus(Status.Waiting);;
 			
 			final Socket socket = serverSocket.accept();

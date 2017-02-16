@@ -22,19 +22,22 @@ public final class AppController {
 		}
 	}
 	
-	public static void addNew(App pApp){
+	public static void addNew(App pApp){		
 		appsLock.lock();
 		apps.add(pApp);
 		appsLock.unlock();
-	}
-	
-	public static void remove(App pApp){
+		
 		//Set number of robots in view:
 		ViewController.setNumberOfApps(AppController.getApps().size());
-		
+	}
+	
+	public static void remove(App pApp){		
 		appsLock.lock();
 		apps.remove(pApp);
 		appsLock.unlock();
+		
+		//Set number of robots in view:
+		ViewController.setNumberOfApps(AppController.getApps().size());
 	}
 	
 	public static List<App> getApps() {

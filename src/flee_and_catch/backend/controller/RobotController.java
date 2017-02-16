@@ -20,19 +20,22 @@ public final class RobotController {
 		}
 	}
 	
-	public static void addNew(Robot pRobot){
+	public static void addNew(Robot pRobot){		
 		robotsLock.lock();
 		robots.add(pRobot);
 		robotsLock.unlock();
-	}
-	
-	public static void remove(Robot pRobot){
+		
 		//Set number of robots in view:
 		ViewController.setNumberOfRobots(RobotController.getRobots().size());
-		
+	}
+	
+	public static void remove(Robot pRobot){		
 		robotsLock.lock();
 		robots.remove(pRobot);
 		robotsLock.unlock();
+		
+		//Set number of robots in view:
+		ViewController.setNumberOfRobots(RobotController.getRobots().size());
 	}
 	
 	public static ArrayList<Robot> getRobots() {

@@ -113,8 +113,6 @@ public class Interpreter {
 					client.setIdentification(command.getIdentification());
 					client.setDevice(app);
 					AppController.addNew(app);
-					//Set number of robots in view:
-					ViewController.setNumberOfApps(AppController.getApps().size());
 					break;
 				case Robot:
 					Robot robot = (Robot)command.getDevice();
@@ -123,8 +121,6 @@ public class Interpreter {
 					client.setIdentification(command.getIdentification());
 					client.setDevice(robot);
 					RobotController.addNew(robot);
-					//Set number of robots in view:
-					ViewController.setNumberOfRobots(RobotController.getRobots().size());
 					break;
 				default:
 					throw new Exception("Undefined connection");
@@ -180,7 +176,11 @@ public class Interpreter {
 	 * @author ThunderSL94
 	 */
 	private void synchronization(JSONObject pCommand) throws Exception{		
-		SynchronizationCommand command = gson.fromJson(pCommand.toString(), SynchronizationCommand.class);
+		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(Szenario.class, new SzenarioAdapter());
+		builder.setPrettyPrinting();
+		Gson localgson = builder.create();		
+		SynchronizationCommand command = localgson.fromJson(pCommand.toString(), SynchronizationCommand.class);
 		SynchronizationCommandType type = SynchronizationCommandType.valueOf(command.getType());
 		
 		ViewController.increaseNoOfSyncPackages();
@@ -207,6 +207,12 @@ public class Interpreter {
 					}
 				}
 				if(szenario != null){
+					//Update the szenario
+					for(int i=0;i<szenario.getRobots().size();i++){
+						if(szenario.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId())
+							szenario.getRobots().set(i, command.getRobots().get(0));
+					}
+					
 					for(int i=0;i<szenario.getApps().size();i++){
 						//Get the client for the app
 						Client localclient = null;
@@ -217,7 +223,7 @@ public class Interpreter {
 							}
 						}
 						if(localclient != null){
-							SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.CurrentRobot.toString(), client.getIdentification(), command.getSzenarios(), command.getRobots());
+							SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.CurrentRobot.toString(), client.getIdentification(), new ArrayList<Szenario>(), command.getRobots());
 							Server.sendCmd(localclient, gson.toJson(cmd));
 						}
 					}
@@ -232,7 +238,19 @@ public class Interpreter {
 			}
 			throw new Exception("A robot can not get a list of szenarios");
 		case CurrentSzenario:
-			return;
+			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
+				ArrayList<Szenario> szenarios = new ArrayList<Szenario>();
+				Szenario szenario = null;
+				for(int i=0;i<SzenarioController.getSzenarios().size();i++){
+					if(SzenarioController.getSzenarios().get(i).getId() == command.getSzenarios().get(0).getId())
+						szenario = SzenarioController.getSzenarios().get(i);
+				}
+				szenarios.add(szenario);
+				SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.CurrentSzenario.toString(), client.getIdentification(), szenarios, new ArrayList<Robot>());
+				Server.sendCmd(client, gson.toJson(cmd));
+				return;
+			}
+			throw new Exception("A robot can not get a szenario");
 		default:
 			throw new Exception("Argument out of range");
 		}
@@ -358,6 +376,14 @@ public class Interpreter {
 						}
 					}
 				}
+				
+				//Remove szenario
+				Szenario szenario = null;
+				for(int i=0;i<SzenarioController.getSzenarios().size();i++){
+					if(SzenarioController.getSzenarios().get(i).getId() == pCommand.getSzenario().getId())
+						szenario = SzenarioController.getSzenarios().get(i);
+				}
+				SzenarioController.remove(szenario);
 				break;
 			case Start:
 				//No implementation needed
