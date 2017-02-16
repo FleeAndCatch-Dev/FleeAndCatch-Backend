@@ -1,3 +1,8 @@
+/*### MainStageCSS.css ###########################################################################*/
+
+
+/*### ID SPESIFIC ################################################################################*/
+
 #txaDeviceInfo .scroll-pane .content{
     -fx-background-color: rgba(255, 255, 255, 1);
 	-fx-background-image: url("../../../../../res/images/logo120x120.png");
@@ -5,3 +10,44 @@
 	-fx-background-size: 120 120;
 	-fx-background-position: center center;
 }
+
+/*### MENU SETTINGS ##############################################################################*/
+
+.menu:hover {
+	-fx-background-color: rgba(0,0,0,0.0);
+	-fx-background-radius: 10;
+	-fx-effect: dropshadow(three-pass-box, -fx-focus-color, 15, 0.3, 0, 0);
+}
+
+.menu:hover > .label {
+	-fx-text-fill: black;
+}
+
+.menu:showing {
+	-fx-background-color: rgba(0,0,0,0.0);
+	-fx-background-radius: 10;
+	-fx-effect: dropshadow(three-pass-box, -fx-focus-color, 15, 0.3, 0, 0);
+}
+
+.menu:showing > .label {
+	-fx-text-fill: black;
+}
+
+/*### MENUITEMS SETTINGS #########################################################################*/
+
+.menu-item {
+	-fx-background-radius: 10;
+}
+
+.menu-item:focused {
+	-fx-background-color: rgba(0,0,0,0.0);
+	-fx-effect: dropshadow(three-pass-box, rgba(3,7,211,0.75), 15, 0.3, 0, 0);
+	-fx-focused-mark-color: -fx-mark-color;
+}
+
+.menu-item:focused .label{
+	-fx-text-fill: black;
+	
+}
+
+/*### EOF ########################################################################################*/

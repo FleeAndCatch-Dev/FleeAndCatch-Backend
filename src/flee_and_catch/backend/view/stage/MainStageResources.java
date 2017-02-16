@@ -4,6 +4,8 @@ package flee_and_catch.backend.view.stage;
 
 import java.io.File;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.image.Image;
@@ -38,6 +40,14 @@ public class MainStageResources {
 	//Menu bar texts:
 	String mnuProgramText;
 	String mniExitText;
+	String mnuSettingsText;
+	String cmiSoundText;
+	String cmiPackagesSyncText;
+	String cmiPackagesControlText;
+	String cmiPackagesScenarioText;
+	String cmiPackagesConnectText;
+	String cmiPackagesDisconnectText;
+	String cmiPackagesErrorText;
 	//Status bar message:
 	String stbMsgScanning;
 	String stbMsgDeviceConnected;
@@ -47,6 +57,7 @@ public class MainStageResources {
 	StringProperty lblStbPackagesSyncValue;
 	StringProperty lblStbPackagesControlValue;
 	StringProperty lblStbPackagesScenarioValue;
+	StringProperty lblStbPackagesErrorValue;
 	//Dialog texts:
 	String cpdTitle;
 	String cpdHeaderText;
@@ -65,7 +76,17 @@ public class MainStageResources {
 	Image fleeAndCatchLogo128x128;
 	Image fleeAndCatchLogo256x256;
 	//Menu bar icons:
+	Image programIcon16x16;
 	Image exitIcon16x16;
+	Image settingsIcon16x16;
+	Image soundIcon16x16;
+	Image soundMuteIcon16x16;
+	Image packagesConnectOffIcon16x16;
+	Image packagesDisconnectOffIcon16x16;
+	Image packagesSyncOffIcon16x16;
+	Image packagesControlOffIcon16x16;
+	Image packagesScenarioOffIcon16x16;
+	Image packagesErrorOffIcon16x16;
 	//Content icons:
 	Image deviceIcon16x16;
 	Image allIcon16x16;
@@ -84,12 +105,25 @@ public class MainStageResources {
 	Image packagesSyncIcon16x16;
 	Image packagesControlIcon16x16;
 	Image packagesScenarioIcon16x16;
+	Image packagesErrorIcon16x16;
 	Image facLogo120x120;
 	
 	//### Files ################################################################################
 	
 	File deviceConnectedSound;
 	File deviceDisconnectedSound;
+	
+	
+	//### Configurations #######################################################################
+	
+	//Normally in a separate class!!!!!!
+	BooleanProperty soundOn;
+	BooleanProperty showSyncPackages;
+	BooleanProperty showControlPackages;
+	BooleanProperty showScenarioPackages;
+	BooleanProperty showConnectPackages;
+	BooleanProperty showDisconnectPackages;
+	BooleanProperty showErrorPackages;
 	
 //### CONSTRUCTORS #########################################################################################################################
 	
@@ -121,6 +155,14 @@ public class MainStageResources {
 		//Menu bar texts:
 		this.mnuProgramText     = "Program";
 		this.mniExitText        = "Exit";
+		this.mnuSettingsText    = "Settings";
+		this.cmiSoundText       = "Sound";
+		this.cmiPackagesSyncText = "Syncronistation Packages";
+		this.cmiPackagesControlText = "Control Packages";
+		this.cmiPackagesScenarioText = "Scenario Packages";
+		this.cmiPackagesConnectText = "Connect Packages";
+		this.cmiPackagesDisconnectText = "Disconnect Packages";
+		this.cmiPackagesErrorText = "Error Packages";
 		//Status bar messages:
 		this.stbMsgScanning     = "Waiting for Devices...";
 		this.stbMsgDeviceConnected = "New device has been connected!";
@@ -130,7 +172,7 @@ public class MainStageResources {
 		this.lblStbPackagesSyncValue = new SimpleStringProperty("0");
 		this.lblStbPackagesControlValue = new SimpleStringProperty("0");
 		this.lblStbPackagesScenarioValue = new SimpleStringProperty("0");
-		
+		this.lblStbPackagesErrorValue = new SimpleStringProperty("0");
 		//Close-Dialog-Texts:
 		this.cpdTitle           = "Flee and Catch - Backend";
 		this.cpdHeaderText      = "Exit program?";
@@ -141,39 +183,61 @@ public class MainStageResources {
 		
 		//### Images ###############################################################################
 		
-		this.fleeAndCatchLogo16x16   = new Image("icons/fleeAndCatchLogo16x16.png");
-		this.fleeAndCatchLogo24x24   = new Image("icons/fleeAndCatchLogo24x24.png");
-		this.fleeAndCatchLogo32x32   = new Image("icons/fleeAndCatchLogo32x32.png");
-		this.fleeAndCatchLogo48x48   = new Image("icons/fleeAndCatchLogo48x48.png");
-		this.fleeAndCatchLogo64x64   = new Image("icons/fleeAndCatchLogo64x64.png");
-		this.fleeAndCatchLogo128x128 = new Image("icons/fleeAndCatchLogo128x128.png");
-		this.fleeAndCatchLogo256x256 = new Image("icons/fleeAndCatchLogo256x256.png");
+		this.fleeAndCatchLogo16x16       = new Image("icons/fleeAndCatchLogo16x16.png");
+		this.fleeAndCatchLogo24x24       = new Image("icons/fleeAndCatchLogo24x24.png");
+		this.fleeAndCatchLogo32x32       = new Image("icons/fleeAndCatchLogo32x32.png");
+		this.fleeAndCatchLogo48x48       = new Image("icons/fleeAndCatchLogo48x48.png");
+		this.fleeAndCatchLogo64x64       = new Image("icons/fleeAndCatchLogo64x64.png");
+		this.fleeAndCatchLogo128x128     = new Image("icons/fleeAndCatchLogo128x128.png");
+		this.fleeAndCatchLogo256x256     = new Image("icons/fleeAndCatchLogo256x256.png");
 		
-		this.exitIcon16x16           = new Image("icons/exit16x16.png");
-		this.deviceIcon16x16         = new Image("icons/device16x16.png");
-		this.allIcon16x16            = new Image("icons/all16x16.png");
-		this.robotIcon16x16          = new Image("icons/robot16x16.png");
-		this.appIcon16x16            = new Image("icons/app16x16.png");
-		this.scenariosIcon16x16      = new Image("icons/scenario16x16.png");
-		this.ipaddIcon16x16          = new Image("icons/ipadd16x16.png");
-		this.portIcon16x16           = new Image("icons/port16x16.png");
-		this.backendIcon16x16        = new Image("icons/backend16x16.png");
-		this.clockIcon16x16          = new Image("icons/clock16x16.png");
-		this.connectedIcon16x16      = new Image("icons/connected16x16.png");
-		this.disconnectedIcon16x16   = new Image("icons/disconnected16x16.png");
-		this.scanningIcon16x16       = new Image("icons/scanning16x16.png");
-		this.packagesConnectIcon16x16  = new Image("icons/packageConnect16x16.png");
-		this.packagesDisconnectIcon16x16  = new Image("icons/packageDisconnect16x16.png");
-		this.packagesSyncIcon16x16   = new Image("icons/packageSync16x16.png");
-		this.packagesControlIcon16x16   = new Image("icons/packageControl16x16.png");
+		this.programIcon16x16            = new Image("icons/program16x16.png");
+		this.exitIcon16x16               = new Image("icons/exit16x16.png");
+		this.settingsIcon16x16           = new Image("icons/settings16x16.png");
+		this.soundIcon16x16              = new Image("icons/sound16x16.png");
+		this.soundMuteIcon16x16          = new Image("icons/soundMute16x16.png");
+		this.deviceIcon16x16             = new Image("icons/device16x16.png");
+		this.allIcon16x16                = new Image("icons/all16x16.png");
+		this.robotIcon16x16              = new Image("icons/robot16x16.png");
+		this.appIcon16x16                = new Image("icons/app16x16.png");
+		this.scenariosIcon16x16          = new Image("icons/scenario16x16.png");
+		this.ipaddIcon16x16              = new Image("icons/ipadd16x16.png");
+		this.portIcon16x16               = new Image("icons/port16x16.png");
+		this.backendIcon16x16            = new Image("icons/backend16x16.png");
+		this.clockIcon16x16              = new Image("icons/clock16x16.png");
+		this.connectedIcon16x16          = new Image("icons/connected16x16.png");
+		this.disconnectedIcon16x16       = new Image("icons/disconnected16x16.png");
+		this.scanningIcon16x16           = new Image("icons/scanning16x16.png");
+		this.packagesConnectIcon16x16    = new Image("icons/packageConnect16x16.png");
+		this.packagesConnectOffIcon16x16 = new Image("icons/packageConnectDisabled16x16.png");
+		this.packagesDisconnectIcon16x16 = new Image("icons/packageDisconnect16x16.png");
+		this.packagesDisconnectOffIcon16x16 = new Image("icons/packageDisconnectDisabled16x16.png");
+		this.packagesSyncIcon16x16       = new Image("icons/packageSync16x16.png");
+		this.packagesSyncOffIcon16x16       = new Image("icons/packageSyncDisabled16x16.png");
+		this.packagesControlIcon16x16    = new Image("icons/packageControl16x16.png");
+		this.packagesControlOffIcon16x16    = new Image("icons/packageControlDisabled16x16.png");
 		this.packagesScenarioIcon16x16   = new Image("icons/packageScenario16x16.png");
-		this.facLogo120x120          = new Image("images/logo120x120.png");
+		this.packagesScenarioOffIcon16x16   = new Image("icons/packageScenarioDisabled16x16.png");
+		this.packagesErrorIcon16x16      = new Image("icons/packageError16x16.png");
+		this.packagesErrorOffIcon16x16      = new Image("icons/packageErrorDisabled16x16.png");
+		this.facLogo120x120              = new Image("images/logo120x120.png");
 		
 		
 		//### Files ################################################################################
 		
 		this.deviceConnectedSound    = new File("res/sounds/deviceConnectedSound.wav");
 		this.deviceDisconnectedSound = new File("res/sounds/deviceDisconnectedSound.wav");
+		
+		
+		//### Configurations #######################################################################
+		
+		this.soundOn = new SimpleBooleanProperty(true);
+		this.showSyncPackages = new SimpleBooleanProperty(true);
+		this.showControlPackages = new SimpleBooleanProperty(true);
+		this.showScenarioPackages = new SimpleBooleanProperty(true);
+		this.showConnectPackages = new SimpleBooleanProperty(true);
+		this.showDisconnectPackages = new SimpleBooleanProperty(true);
+		this.showErrorPackages = new SimpleBooleanProperty(true);
 	}
 	
 //##########################################################################################################################################

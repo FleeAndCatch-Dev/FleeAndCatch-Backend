@@ -4,6 +4,8 @@ package flee_and_catch.backend.view.stage;
 
 //### IMPORTS ##############################################################################################################################
 import org.controlsfx.control.StatusBar;
+
+import flee_and_catch.backend.view.stage.components.CustomeRotateTransition;
 import flee_and_catch.backend.view.stage.components.TitledBorderPane;
 import javafx.animation.PauseTransition;
 import javafx.animation.RotateTransition;
@@ -11,16 +13,19 @@ import javafx.animation.SequentialTransition;
 import javafx.animation.Transition;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -32,6 +37,7 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -45,10 +51,29 @@ public class MainStage extends Stage {
 	Scene scene;
 
 	//Root pane (container) that contains all GUI components:
+	StackPane skpRootPane;
 	BorderPane bdpRootPane;
+	GridPane gdpPseudoPane;
 	//Menu bar at the top of the window:
 	MenuBar mnbMenuBar;
+	
+	ImageView imvProgram;
 	Menu mnuProgram;
+	Label lblPseudoMnuProgram;
+	CustomeRotateTransition rttMnuProgram;
+	
+	ImageView imvSettings;
+	Menu mnuSettings;
+	Label lblPseudoMnuSettings;
+	CustomeRotateTransition rttMnuSettings;
+	CheckMenuItem cmiSound;
+	SeparatorMenuItem smiMnuSettings;
+	CheckMenuItem cmiPackagesSync;
+	CheckMenuItem cmiPackagesControl;
+	CheckMenuItem cmiPackagesScenario;
+	CheckMenuItem cmiPackagesConnect;
+	CheckMenuItem cmiPackagesDisconnect;
+	CheckMenuItem cmiPackagesError;
 	MenuItem mniExit;
 	//Status bar for the bottom of the window:
 	StatusBar stbStatusBar;
@@ -64,6 +89,7 @@ public class MainStage extends Stage {
 	Label     lblStbPackagesScenario;
 	Label     lblStbPackagesConnect;
 	Label     lblStbPackagesDisconnect;
+	Label     lblStbPackagesError;
 	Label     lblStbTime;
 	//Main pane for the content of the view:
 	GridPane gdpMainPane;
@@ -100,21 +126,23 @@ public class MainStage extends Stage {
 
 	public MainStage(
 			MainStageResources res, 
+			EventHandler<Event>			geh,
 			EventHandler<ActionEvent>	aeh,
 			ChangeListener<Object>      ceh,
 			EventHandler<MouseEvent>  	meh,
 			EventHandler<KeyEvent>    	keh, 
 			EventHandler<WindowEvent> 	weh) {
 		
-		this.initComponents(res, aeh, ceh, meh, keh);
+		this.initComponents(res, geh, aeh, ceh, meh, keh);
 		this.structureComponents();
-		this.initStage(res, weh);
+		this.initStage(res, meh, weh);
 	}
 	
 //### INITAL METHODS #######################################################################################################################
 	
 	private void initComponents(		
 			MainStageResources res, 
+			EventHandler<Event>			geh,
 			EventHandler<ActionEvent>	aeh,
 			ChangeListener<Object>      ceh,
 			EventHandler<MouseEvent>  	meh,
@@ -123,13 +151,72 @@ public class MainStage extends Stage {
 		
 		//### Basic layout elements ################################################################
 		
+		this.skpRootPane = new StackPane();
 		this.bdpRootPane = new BorderPane();
+		this.gdpPseudoPane = new GridPane();
 		
 		this.mnbMenuBar = new MenuBar();
+		this.mnbMenuBar.setUseSystemMenuBar(false);
+		this.mnbMenuBar.setFocusTraversable(true);
+		this.mnbMenuBar.addEventHandler(MouseEvent.MOUSE_CLICKED, meh);
+		
+		this.imvProgram = new ImageView(res.programIcon16x16);
+		this.imvProgram.setId("imvProgram");
 		this.mnuProgram = new Menu(res.mnuProgramText);
+		this.mnuProgram.setId("mnuProgram");
+		this.mnuProgram.setGraphic(this.imvProgram);
+		this.lblPseudoMnuProgram = new Label(res.mnuProgramText);
+		this.lblPseudoMnuProgram.setId("mnuProgramPseudo");
+		this.lblPseudoMnuProgram.setGraphic(this.imvProgram);
+		this.rttMnuProgram = new CustomeRotateTransition();
+		this.rttMnuProgram.setId("mnuProgramRtt");
+		this.rttMnuProgram.setRotateTransition(new RotateTransition(Duration.millis(2000), this.imvProgram));
+		this.rttMnuProgram.getRotateTransition().setByAngle(360);
+		this.rttMnuProgram.getRotateTransition().setCycleCount(1);
+		this.rttMnuProgram.getRotateTransition().setAxis(Rotate.Y_AXIS);
+		
 		this.mniExit    = new MenuItem(res.mniExitText);
 		this.mniExit.setGraphic(new ImageView(res.exitIcon16x16));
 		this.mniExit.setOnAction(aeh);
+		this.mniExit.setId("mniExit");
+		
+		this.imvSettings = new ImageView(res.settingsIcon16x16);
+		this.imvSettings.setId("imvSettings");
+		this.mnuSettings = new Menu(res.mnuSettingsText);
+		this.mnuSettings.setId("mnuSettings");
+		this.mnuSettings.setGraphic(this.imvSettings);
+		this.lblPseudoMnuSettings = new Label(res.mnuSettingsText);
+		this.lblPseudoMnuSettings.setId("mnuSettingsPseudo");
+		this.lblPseudoMnuSettings.setGraphic(this.imvSettings);
+		this.rttMnuSettings = new CustomeRotateTransition();
+		this.rttMnuSettings.setId("mnuSettingsRtt");
+		this.rttMnuSettings.setRotateTransition(new RotateTransition(Duration.millis(2000), this.imvSettings));
+		this.rttMnuSettings.getRotateTransition().setByAngle(360);
+		this.rttMnuSettings.getRotateTransition().setCycleCount(1);
+		this.rttMnuSettings.getRotateTransition().setAxis(Rotate.Y_AXIS);
+
+		this.cmiSound = new CheckMenuItem(res.cmiSoundText);
+		this.cmiSound.setGraphic(new ImageView(res.soundIcon16x16));
+		this.cmiSound.setOnAction(aeh);
+		this.smiMnuSettings = new SeparatorMenuItem();
+		this.cmiPackagesSync = new CheckMenuItem(res.cmiPackagesSyncText);
+		this.cmiPackagesSync.setGraphic(new ImageView(res.packagesSyncIcon16x16));
+		this.cmiPackagesSync.setOnAction(aeh);
+		this.cmiPackagesControl = new CheckMenuItem(res.cmiPackagesControlText);
+		this.cmiPackagesControl.setGraphic(new ImageView(res.packagesControlIcon16x16));
+		this.cmiPackagesControl.setOnAction(aeh);
+		this.cmiPackagesScenario = new CheckMenuItem(res.cmiPackagesScenarioText);
+		this.cmiPackagesScenario.setGraphic(new ImageView(res.packagesScenarioIcon16x16));
+		this.cmiPackagesScenario.setOnAction(aeh);
+		this.cmiPackagesConnect = new CheckMenuItem(res.cmiPackagesConnectText);
+		this.cmiPackagesConnect.setGraphic(new ImageView(res.packagesConnectIcon16x16));
+		this.cmiPackagesConnect.setOnAction(aeh);
+		this.cmiPackagesDisconnect = new CheckMenuItem(res.cmiPackagesDisconnectText);
+		this.cmiPackagesDisconnect.setGraphic(new ImageView(res.packagesDisconnectIcon16x16));
+		this.cmiPackagesDisconnect.setOnAction(aeh);
+		this.cmiPackagesError = new CheckMenuItem(res.cmiPackagesErrorText);
+		this.cmiPackagesError.setGraphic(new ImageView(res.packagesErrorIcon16x16));
+		this.cmiPackagesError.setOnAction(aeh);
 		
 		this.stbStatusBar = new StatusBar();
 		this.stbStatusBar.setText("");
@@ -158,7 +245,6 @@ public class MainStage extends Stage {
 		
 		this.lblStbTime = new Label();
 		this.lblStbTime.setGraphic(new ImageView(res.clockIcon16x16));
-		
 		this.hbxStbPackagesInfo = new HBox(15);
 		this.hbxStbPackagesInfo.setPadding(new Insets(0,20,0,20));
 		
@@ -172,10 +258,13 @@ public class MainStage extends Stage {
 		this.lblStbPackagesControl.setGraphic(new ImageView(res.packagesControlIcon16x16));
 		this.lblStbPackagesScenario = new Label();
 		this.lblStbPackagesScenario.setGraphic(new ImageView(res.packagesScenarioIcon16x16));
+		this.lblStbPackagesError = new Label();
+		this.lblStbPackagesError.setGraphic(new ImageView(res.packagesErrorIcon16x16));
 		
 		this.gdpMainPane = new GridPane();
 		this.gdpMainPane.setPadding(new Insets(20,15,15,15));
 		this.gdpMainPane.setVgap(20);
+		this.gdpMainPane.setOnMouseEntered(meh);
 
 		//### Backend information ##################################################################
 		
@@ -303,7 +392,16 @@ public class MainStage extends Stage {
 		
 		//Setuo menu bar:
 		this.mnuProgram.getItems().add(this.mniExit);
-		this.mnbMenuBar.getMenus().add(this.mnuProgram);
+		this.mnuSettings.getItems().addAll(
+				this.cmiSound, 
+				this.smiMnuSettings, 
+				this.cmiPackagesSync,
+				this.cmiPackagesControl,
+				this.cmiPackagesScenario,
+				this.cmiPackagesConnect,
+				this.cmiPackagesDisconnect,
+				this.cmiPackagesError);
+		this.mnbMenuBar.getMenus().addAll(this.mnuProgram, this.mnuSettings);
 		
 		//Setup status bar:
 		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesSync);
@@ -311,6 +409,7 @@ public class MainStage extends Stage {
 		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesScenario);
 		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesConnect);
 		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesDisconnect);
+		this.hbxStbPackagesInfo.getChildren().add(this.lblStbPackagesError);
 		this.stbStatusBar.getRightItems().add(this.hbxStbPackagesInfo);
 		this.stbStatusBar.getRightItems().add(this.lblStbTime);
 		//Add main pane / menu bar / status bar to root pane:
@@ -318,13 +417,21 @@ public class MainStage extends Stage {
 		this.bdpRootPane.setBottom(this.stbStatusBar);
 		this.bdpRootPane.setCenter(this.gdpMainPane);
 		
+		this.gdpPseudoPane.getChildren().add(this.lblPseudoMnuProgram);
+		this.gdpPseudoPane.getChildren().add(this.rttMnuProgram);
+		this.gdpPseudoPane.getChildren().add(this.lblPseudoMnuSettings);
+		this.gdpPseudoPane.getChildren().add(this.rttMnuSettings);
+		
+		this.skpRootPane.getChildren().addAll(this.gdpPseudoPane, this.bdpRootPane);
+		
 	}
 	
-	private void initStage(MainStageResources res, EventHandler<WindowEvent> weh) {
+	private void initStage(MainStageResources res, EventHandler<MouseEvent> meh, EventHandler<WindowEvent> weh) {
 		
 		//Create scene and set their properties:
-		this.scene = new Scene(this.bdpRootPane, 700, 500);
-		this.scene.getStylesheets().add(MainStage.class.getResource("MainStageCSS.css").toExternalForm());;
+		this.scene = new Scene(this.skpRootPane, 700, 500);
+		this.scene.getStylesheets().add(MainStage.class.getResource("MainStageCSS.css").toExternalForm());
+		this.addEventHandler(MouseEvent.ANY, meh);
 		//Set stage properties:
 		this.setScene(this.scene);
 		this.setTitle(res.stageTitle);
@@ -339,9 +446,11 @@ public class MainStage extends Stage {
 		this.setMinWidth(550);
 		this.setMinHeight(420);
 		this.setOnCloseRequest(weh);
+		this.scpDeviceTreePane.requestFocus();
 	}
 	
 	public void adjustComponents() {
+		this.trvDeviceTree.autosize();
 		this.tbpBackendInfo.adjustTitleSize();
 		this.tbpDeviceInfo.adjustTitleSize();
 		this.lblStbTime.setTranslateY(4.0);	//Needed because status bar set label not in the middle!
@@ -350,7 +459,9 @@ public class MainStage extends Stage {
 		this.lblStbPackagesSync.setTranslateY(4.0);
 		this.lblStbPackagesControl.setTranslateY(4.0);
 		this.lblStbPackagesScenario.setTranslateY(4.0);
+		this.lblStbPackagesError.setTranslateY(4.0);
 	}
+	
 	
 //##########################################################################################################################################
 }

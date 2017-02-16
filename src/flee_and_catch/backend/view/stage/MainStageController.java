@@ -2,12 +2,13 @@
 
 package flee_and_catch.backend.view.stage;
 
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-
 import flee_and_catch.backend.communication.Client;
 import flee_and_catch.backend.communication.Server;
 import flee_and_catch.backend.communication.command.device.app.App;
@@ -15,20 +16,27 @@ import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.view.Status;
+import flee_and_catch.backend.view.stage.components.CustomeRotateTransition;
+import javafx.animation.Animation;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.WindowEvent;
+import javafx.util.Duration;
 
 //### IMPORTS ##############################################################################################################################
 
@@ -45,18 +53,20 @@ public class MainStageController {
 	
 	private	MainStage 			view;		//View!
 	private MainStageResources 	res;		//Resources for the view
+	private GeneralEventHandler geh;		//Handler for common / general events on the view!!
 	private ActionEventHandler 	aeh;		//Handler for action events (e.g. clicks) on the view!
-	private ChangeEventHandler  ceh;
+	private ChangeEventHandler  ceh;		//Handler for change events (e.g tree view changes) on the view!(
 	private MouseEventHandler   meh;		//Handler for mouse events (e.g. mouse movement) on the view!
 	private KeyEventHandler 	keh;		//Handler for key events (e.g. keypress) on view!
 	private WindowEventHandler 	weh;		//Handler for window events (e.g. close over cross) on view!
 	
 	//Threads:
+	private DetectCursorPositionThread dcpt;
 	private ShowTimeThread stt;
 	private ShowStatusThread sst;
 	
 	//Helping Variables:
-	private ArrayList<Status> proStates;				//Saves the states of the program!
+	private ArrayList<Status> proStates;	//Saves the states of the program!
 	private Status curState;				//Saves the status that is processed by the view!
 	
 //### CONSTRUCTORS #########################################################################################################################	
@@ -70,8 +80,11 @@ public class MainStageController {
 
 		//Initialize the resources for the view:
 		this.res = new MainStageResources();
+		//Initialize the common event handler for the view:
+		this.geh = new GeneralEventHandler();
 		//Initialize the action event handler for the view:
 		this.aeh = new ActionEventHandler();
+		//Initialize the change event handler for the view:
 		this.ceh = new ChangeEventHandler();
 		//Initialize the mouse event handler for the view:
 		this.meh = new MouseEventHandler();
@@ -80,10 +93,11 @@ public class MainStageController {
 		//Initialize the window event handler for the view:
 		this.weh = new WindowEventHandler();
 		//Initialize the view:
-		this.view = new MainStage(res, aeh, ceh, meh, keh, weh);
+		this.view = new MainStage(res, geh, aeh, ceh, meh, keh, weh);
 
 		this.stt = new ShowTimeThread();
 		this.sst = new ShowStatusThread();
+		this.dcpt = new DetectCursorPositionThread();
 		
 		this.proStates = new ArrayList<Status>();
 		this.curState = Status.Nothing;
@@ -93,6 +107,7 @@ public class MainStageController {
 		
 		//Set flag that GUI is initialized:
 		MainStageController.inizialized = true;
+
 	}
 	
 	private void initBindings() {
@@ -102,9 +117,28 @@ public class MainStageController {
 		this.view.lblStbPackagesScenario.textProperty().bind(this.res.lblStbPackagesScenarioValue);
 		this.view.lblStbPackagesConnect.textProperty().bind(this.res.lblStbPackagesConnectValue);
 		this.view.lblStbPackagesDisconnect.textProperty().bind(this.res.lblStbPackagesDisconnectValue);
+		this.view.lblStbPackagesError.textProperty().bind(this.res.lblStbPackagesErrorValue);
+		
+		this.view.cmiSound.selectedProperty().bindBidirectional(res.soundOn);
+		this.view.cmiPackagesSync.selectedProperty().bindBidirectional(res.showSyncPackages);
+		this.view.cmiPackagesControl.selectedProperty().bindBidirectional(res.showControlPackages);
+		this.view.cmiPackagesScenario.selectedProperty().bindBidirectional(res.showScenarioPackages);
+		this.view.cmiPackagesConnect.selectedProperty().bindBidirectional(res.showConnectPackages);
+		this.view.cmiPackagesDisconnect.selectedProperty().bindBidirectional(res.showDisconnectPackages);
+		this.view.cmiPackagesError.selectedProperty().bindBidirectional(res.showErrorPackages);
 	}
 	
 //### EVENT HANDLER ########################################################################################################################
+	
+	
+	private class GeneralEventHandler implements EventHandler<Event> {
+
+		@Override
+		public void handle(Event event) {
+
+		}
+		
+	}
 	
 	/* ActionEventHandler [class]: Class that implements an event handler that handles all action events of the view *//**
 	 * 
@@ -129,6 +163,122 @@ public class MainStageController {
 			else if(src == MainStageController.this.view.rttDisconnected) {
 				MainStageController.this.curState = Status.Nothing;
 				MainStageController.this.proStates.remove(0);
+			}
+			else if(src == MainStageController.this.view.cmiSound) {
+				MainStageController.this.setCmiSoundIcon();
+			}
+			else if(src == MainStageController.this.view.cmiPackagesSync) {
+				if(MainStageController.this.res.showSyncPackages.getValue()) {
+					MainStageController.this.view.cmiPackagesSync.setGraphic(new ImageView(MainStageController.this.res.packagesScenarioIcon16x16));
+					MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(0, MainStageController.this.view.lblStbPackagesSync);
+				}
+				else {
+					MainStageController.this.view.cmiPackagesSync.setGraphic(new ImageView(MainStageController.this.res.packagesScenarioOffIcon16x16));
+					MainStageController.this.view.hbxStbPackagesInfo.getChildren().remove(MainStageController.this.view.lblStbPackagesSync);
+				}
+				
+			}
+			else if(src == MainStageController.this.view.cmiPackagesControl) {
+				if(MainStageController.this.res.showControlPackages.getValue()) {
+					MainStageController.this.view.cmiPackagesControl.setGraphic(new ImageView(MainStageController.this.res.packagesControlIcon16x16));
+					boolean added = false;
+					int size = MainStageController.this.view.hbxStbPackagesInfo.getChildren().size();
+					for(int i = 0; i < size; i++) {
+						if(MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesScenario
+								|| MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesConnect 
+								|| MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesDisconnect
+								|| MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesError) {
+							MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(i, MainStageController.this.view.lblStbPackagesControl);
+							added = true;
+							break;
+						}
+					}
+					if(added == false) {
+						MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(size, MainStageController.this.view.lblStbPackagesControl);
+					}
+				}
+				else {
+					MainStageController.this.view.cmiPackagesControl.setGraphic(new ImageView(MainStageController.this.res.packagesControlOffIcon16x16));
+					MainStageController.this.view.hbxStbPackagesInfo.getChildren().remove(MainStageController.this.view.lblStbPackagesControl);
+				}
+			}
+			else if(src == MainStageController.this.view.cmiPackagesScenario) {
+				if(MainStageController.this.res.showScenarioPackages.getValue()) {
+					MainStageController.this.view.cmiPackagesScenario.setGraphic(new ImageView(MainStageController.this.res.packagesScenarioIcon16x16));
+					boolean added = false;
+					int size = MainStageController.this.view.hbxStbPackagesInfo.getChildren().size();
+					for(int i = 0; i < size; i++) {
+						if(MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesConnect 
+								|| MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesDisconnect
+								|| MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesError) {
+							MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(i, MainStageController.this.view.lblStbPackagesScenario);
+							added = true;
+							break;
+						}
+					}
+					if(added == false) {
+						MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(size, MainStageController.this.view.lblStbPackagesScenario);
+					}
+				}
+				else {
+					MainStageController.this.view.cmiPackagesScenario.setGraphic(new ImageView(MainStageController.this.res.packagesScenarioOffIcon16x16));
+					MainStageController.this.view.hbxStbPackagesInfo.getChildren().remove(MainStageController.this.view.lblStbPackagesScenario);
+				}
+			}
+			else if(src == MainStageController.this.view.cmiPackagesConnect) {
+				if(MainStageController.this.res.showConnectPackages.getValue()) {
+					MainStageController.this.view.cmiPackagesConnect.setGraphic(new ImageView(MainStageController.this.res.packagesConnectIcon16x16));
+					boolean added = false;
+					int size = MainStageController.this.view.hbxStbPackagesInfo.getChildren().size();
+					for(int i = 0; i < size; i++) {
+						if(MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesDisconnect
+								|| MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesError) {
+							MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(i, MainStageController.this.view.lblStbPackagesConnect);
+							added = true;
+							break;
+						}
+					}
+					if(added == false) {
+						MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(size, MainStageController.this.view.lblStbPackagesConnect);
+					}
+				}
+				else {
+					MainStageController.this.view.cmiPackagesConnect.setGraphic(new ImageView(MainStageController.this.res.packagesConnectOffIcon16x16));
+					MainStageController.this.view.hbxStbPackagesInfo.getChildren().remove(MainStageController.this.view.lblStbPackagesConnect);
+				}
+			}
+			else if(src == MainStageController.this.view.cmiPackagesDisconnect) {
+				if(MainStageController.this.res.showDisconnectPackages.getValue()) {
+					MainStageController.this.view.cmiPackagesDisconnect.setGraphic(new ImageView(MainStageController.this.res.packagesDisconnectIcon16x16));
+					boolean added = false;
+					int size = MainStageController.this.view.hbxStbPackagesInfo.getChildren().size();
+					for(int i = 0; i < size; i++) {
+						if(MainStageController.this.view.hbxStbPackagesInfo.getChildren().get(i) == MainStageController.this.view.lblStbPackagesError) {
+							MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(i, MainStageController.this.view.lblStbPackagesDisconnect);
+							added = true;
+							break;
+						}
+					}
+					if(added == false) {
+						MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(size, MainStageController.this.view.lblStbPackagesDisconnect);
+					}
+				}
+				else {
+					MainStageController.this.view.cmiPackagesDisconnect.setGraphic(new ImageView(MainStageController.this.res.packagesDisconnectOffIcon16x16));
+					MainStageController.this.view.hbxStbPackagesInfo.getChildren().remove(MainStageController.this.view.lblStbPackagesDisconnect);
+				}
+			}
+			else if(src == MainStageController.this.view.cmiPackagesError) {
+				if(MainStageController.this.res.showErrorPackages.getValue()) {
+					//Set the icon:
+					MainStageController.this.view.cmiPackagesError.setGraphic(new ImageView(MainStageController.this.res.packagesErrorIcon16x16));
+					int size = MainStageController.this.view.hbxStbPackagesInfo.getChildren().size();
+					MainStageController.this.view.hbxStbPackagesInfo.getChildren().add(size, MainStageController.this.view.lblStbPackagesError);
+				}
+				else {
+					MainStageController.this.view.cmiPackagesError.setGraphic(new ImageView(MainStageController.this.res.packagesErrorOffIcon16x16));
+					MainStageController.this.view.hbxStbPackagesInfo.getChildren().remove(MainStageController.this.view.lblStbPackagesError);
+				}
 			}
 			
 		}
@@ -166,11 +316,24 @@ public class MainStageController {
 	 *
 	 */
 	private class MouseEventHandler implements EventHandler<MouseEvent> {
-
+		
 		@Override
 		public void handle(MouseEvent event) {
-			// TODO Auto-generated method stub
 			
+			if(event.getTarget() == MainStageController.this.view.gdpMainPane) {
+				//Close all menus when cursor leaves the menu bar:
+				for(Menu menu : MainStageController.this.view.mnbMenuBar.getMenus()) {
+					menu.hide();
+				}
+			}
+			else if(event.getSource() == MainStageController.this.view.mnbMenuBar) {
+				MainStageController.this.view.mnbMenuBar.requestFocus();
+			}
+			else {
+				//System.out.println("Move CurPosX: " + event.getSceneX() + " CurPoxY: " + event.getSceneY());
+				
+			}
+
 		}
 		
 	}
@@ -209,6 +372,76 @@ public class MainStageController {
 	}
 	
 //### INNER CLASSES ########################################################################################################################
+	
+	
+	/* ShowTimeThread [class]: Thread that updates the time in the status bar of the stage *//**
+	 * 
+	 * @author mbothner
+	 *
+	 */
+	private class DetectCursorPositionThread extends Thread {
+		
+		@Override
+		public void run() {
+			
+			//Run forever:
+			while(true) {
+				
+				//
+				Platform.runLater(new Runnable() { @Override public void run() {
+					
+					//Get cursor position on screen:
+					Point p = MouseInfo.getPointerInfo().getLocation();
+					//Determine where the scene begins on the screen:
+					int sceneX =  (int) (MainStageController.this.view.getX() + MainStageController.this.view.scene.getX());
+					int sceneY =  (int) (MainStageController.this.view.getY() + MainStageController.this.view.scene.getY());
+					//The meu bar begins on the first pixel of the scene:
+					int menuBarStartX = sceneX;
+					int menuBarStartY = sceneY;
+					
+					int menuBarEndX = (int) (menuBarStartX + MainStageController.this.view.scene.getWidth());
+					int menuBarEndY = (int) (menuBarStartY + MainStageController.this.view.mnbMenuBar.getHeight());
+					
+					//Check if cursor is in the menu bar:
+					if(p.x >= menuBarStartX && p.x <= menuBarEndX && p.y >= menuBarStartY && p.y <= menuBarEndY) {
+						//System.out.println("CURSOR IS IN THE MENUBAR!!!");
+						int menuStartX = menuBarStartX + 9; 	//First element begins 9 pixel after menu bar start!
+						int menuEndX = 0;
+						int menuStartY = menuBarStartY;
+						int menuEndY   = menuBarEndY;
+						for(Menu menu : MainStageController.this.view.mnbMenuBar.getMenus()) {
+							
+							String menuId = menu.getId();
+							
+							Label lblPseudoMenu = (Label) MainStageController.this.view.scene.lookup("#"+ menuId + "Pseudo");
+
+							menuEndX = (int) (menuStartX + lblPseudoMenu.getWidth() + 18);
+							CustomeRotateTransition node = (CustomeRotateTransition) MainStageController.this.view.scene.lookup("#" + menuId + "Rtt");
+							if(p.x >= menuStartX && p.x <= menuEndX && p.y >= menuStartY && p.y <= menuEndY) {
+								if(node.getRotateTransition().getStatus() == Animation.Status.STOPPED) {
+									node.getRotateTransition().playFromStart();
+								}
+							}
+							else {
+						        //Reset the clock-image to the start-position:
+						        node.getRotateTransition().jumpTo(Duration.ZERO);
+								node.getRotateTransition().stop();
+							}
+							menuStartX = menuEndX + 1;
+							
+						}
+					}
+				}});
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+	}
 	
 	/* ShowTimeThread [class]: Thread that updates the time in the status bar of the stage *//**
 	 * 
@@ -310,6 +543,15 @@ public class MainStageController {
 		}
 	}
 	
+	private void setCmiSoundIcon() {
+		if(this.res.soundOn.get()) {
+			this.view.cmiSound.setGraphic(new ImageView(this.res.soundIcon16x16));
+		}
+		else {
+			this.view.cmiSound.setGraphic(new ImageView(this.res.soundMuteIcon16x16));
+		}
+	}
+	
 	private void showAppInfo(int deviceID) {
 		
 		String infoText = "Device Info:\n";
@@ -405,6 +647,7 @@ public class MainStageController {
 		this.sst.start();
 		this.view.show();				//Show stage!
 		this.view.adjustComponents();	//Adjust components after stage is build (shown)!
+		this.dcpt.start();
 	}
 	
 	public void setBackendIPAddress(String address) {
@@ -465,9 +708,11 @@ public class MainStageController {
 	
 	public void setStatusToDeviceConnected() {
 		this.curState = Status.Connected;
-		Media sound = new Media(res.deviceConnectedSound.toURI().toString());
-		MediaPlayer mediaPlayer = new MediaPlayer(sound);
-		mediaPlayer.play();
+		if(this.res.soundOn.getValue()) {
+			Media sound = new Media(res.deviceConnectedSound.toURI().toString());
+			MediaPlayer mediaPlayer = new MediaPlayer(sound);
+			mediaPlayer.play();
+		}
 		this.view.stbStatusBar.setText(this.res.stbMsgDeviceConnected);
 		this.view.stbStatusBar.setGraphic(this.view.imvConnected);
 		this.view.rttConnected.play();
@@ -475,9 +720,11 @@ public class MainStageController {
 	
 	public void setStatusToDeviceDisconnected() {
 		this.curState = Status.Disconnected;
-		Media sound = new Media(res.deviceDisconnectedSound.toURI().toString());
-		MediaPlayer mediaPlayer = new MediaPlayer(sound);
-		mediaPlayer.play();
+		if(this.res.soundOn.getValue()) {
+			Media sound = new Media(res.deviceDisconnectedSound.toURI().toString());
+			MediaPlayer mediaPlayer = new MediaPlayer(sound);
+			mediaPlayer.play();
+		}
 		this.view.stbStatusBar.setText(this.res.stbMsgDeviceDisconnected);
 		this.view.stbStatusBar.setGraphic(this.view.imvDisconnected);
 		this.view.rttDisconnected.play();
