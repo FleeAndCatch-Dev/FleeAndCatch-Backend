@@ -3,8 +3,10 @@ package flee_and_catch.backend.communication.command;
 import java.util.ArrayList;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.szenario.Szenario;
 
 public class SynchronizationCommand extends Command {
+	private ArrayList<Szenario> szenarios;
 	private ArrayList<Robot> robots;
 	
 	/**
@@ -18,9 +20,14 @@ public class SynchronizationCommand extends Command {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public SynchronizationCommand(String pId, String pType, ClientIdentification pIdentification, ArrayList<Robot> pRobots){
+	public SynchronizationCommand(String pId, String pType, ClientIdentification pIdentification, ArrayList<Szenario> pSzenario, ArrayList<Robot> pRobots){
 		super(pId, pType, pIdentification);
+		this.szenarios = pSzenario;
 		this.robots = pRobots;
+	}
+	
+	public ArrayList<Szenario> getSzenarios() {
+		return szenarios;
 	}
 
 	public ArrayList<Robot> getRobots() {

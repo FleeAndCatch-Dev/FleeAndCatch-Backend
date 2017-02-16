@@ -5,10 +5,15 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.json.JSONException;
@@ -27,6 +32,8 @@ import flee_and_catch.backend.communication.command.szenario.Szenario;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
 import flee_and_catch.backend.controller.SzenarioController;
+import flee_and_catch.backend.view.Status;
+import flee_and_catch.backend.view.ViewController;
 
 
 public final class Server {
@@ -35,6 +42,27 @@ public final class Server {
 	private static ServerSocket serverSocket;
 	private static ArrayList<Client> clients = new ArrayList<Client>();
 	private static Lock clientsLock = new ReentrantLock();
+	
+	/* Method that identifies the IP addresses of the maschine 
+       - Must be not LoopBack!
+       - Must be UP!
+       - Must have MAC Address (is not null)
+	 */
+	private static String[] getHostAddresses() {
+		  Set<String> HostAddresses = new HashSet<>();
+		  try {
+		    for (NetworkInterface ni : Collections.list(NetworkInterface.getNetworkInterfaces())) {
+		      if (!ni.isLoopback() && ni.isUp() && ni.getHardwareAddress() != null) {
+		        for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
+		          if (ia.getBroadcast() != null) {  //If limited to IPV4
+		            HostAddresses.add(ia.getAddress().getHostAddress());
+		          }
+		        }
+		      }
+		    }
+		  } catch (SocketException e) { }
+		  return HostAddresses.toArray(new String[0]);
+		}
 	
 	/**
 	 * <h1>Open server</h1>
@@ -48,6 +76,11 @@ public final class Server {
 		if(!opened){
 			port = Default.port;
 			serverSocket = new ServerSocket(port);
+			//Set backend infos:
+			
+			ViewController.setBackendIPAddress(Server.getHostAddresses()[0]);
+			ViewController.setBackendPort(String.valueOf(serverSocket.getLocalPort()));
+			
 			Thread listenerThread = new Thread(new Runnable() {
 				
 				@Override
@@ -105,10 +138,15 @@ public final class Server {
 	 * @author ThunderSL94
 	 */
 	private static void listen() throws IOException {
+		
 		opened = true;
 		while(opened){
-			System.out.println("Wait for clients ...");
+			ViewController.setStatus(Status.Waiting);;
+			
 			final Socket socket = serverSocket.accept();
+			socket.setTcpNoDelay(true);
+			socket.setKeepAlive(true);
+			
 			final int id = generateNewClientId();
 			Thread clientThread = new Thread(new Runnable() {
 				
@@ -151,9 +189,17 @@ public final class Server {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		Client client = new Client(true, new ClientIdentification(pId, pSocket.getInetAddress().getHostAddress(), port, IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
+		//Set status message:
+		ViewController.setStatus(Status.Connected);;
+		int index = pSocket.getRemoteSocketAddress().toString().indexOf(":");
+		
+		Client client = new Client(true, new ClientIdentification(pId, pSocket.getRemoteSocketAddress().toString().substring(1, index), pSocket.getPort(), IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
 		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
 		clientList.add(client);
+		
+		//Set number of devices in view:
+		ViewController.setNumberOfDevices(clientList.size());
+		
 		setClients(clientList);
 		
 		while(client.isConnected()){
@@ -271,6 +317,10 @@ public final class Server {
 		
 		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
 		clientList.remove(pClient);
+		//Set status message 
+		ViewController.setStatus(Status.Disconnected);;
+		//Set number of devices in view:
+		ViewController.setNumberOfDevices(clientList.size());
 		setClients(clientList);
 	}
 
@@ -283,8 +333,9 @@ public final class Server {
 	 * @author ThunderSL94
 	 */
 	public static int generateNewClientId() {
+		clientsLock.lock();
 		int result = 0;
-		ArrayList<Client> tmpclients = getClients();
+		ArrayList<Client> tmpclients = clients;
 		ArrayList<Client> sortclients = new ArrayList<Client>();
 		
 		for(int j=0; j<tmpclients.size(); j++){
@@ -297,13 +348,14 @@ public final class Server {
 			}
 		}
 		
-		if(sortclients.size() > 0)
-			setClients(sortclients);
+		if(sortclients.size() > 1)
+			clients = sortclients;
 		
 		for( int i=0; i<getClients().size(); i++) {
-			if(getClients().get(i).getIdentification().getId() == result)
+			if(clients.get(i).getIdentification().getId() == result)
 				result++;
 		}
+		clientsLock.unlock();
 		
 		return result;
 	}
@@ -335,6 +387,7 @@ public final class Server {
 		}
 		return client;
 	}	
+	
 	public static Szenario getSzenarioOfClient(Client pClient){
 		//Is the current device in a szenario
 		Szenario szenario = null;
@@ -365,6 +418,7 @@ public final class Server {
 		}
 		return szenario;
 	}
+	
 	public static ArrayList<Client> getSzenarioMember(Szenario pSzenario){
 		ArrayList<Client> szenarioMember = new ArrayList<Client>();
 		
@@ -413,15 +467,11 @@ public final class Server {
 			switch (type) {
 				case App:
 					App app = (App)client.getDevice();
-					ArrayList<App> appList = new ArrayList<App>(AppController.getApps());
-					appList.remove(app);
-					AppController.setApps(appList);
+					AppController.remove(app);
 					break;
 				case Robot:
 					Robot robot = (Robot)client.getDevice();
-					ArrayList<Robot> robotList = new ArrayList<Robot>(RobotController.getRobots());
-					robotList.remove(robot);
-					RobotController.setRobots(robotList);
+					RobotController.remove(robot);
 					break;
 				default:
 					break;
@@ -451,4 +501,5 @@ public final class Server {
 		Server.clients = clients;
 		clientsLock.unlock();
 	}
+	
 }

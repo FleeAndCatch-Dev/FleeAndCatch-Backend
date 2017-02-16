@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="res"/>
 	<classpathentry kind="lib" path="res/main/lib/org.json.jar" sourcepath="res/main/lib/gson-2.8.0.jar"/>
 	<classpathentry kind="lib" path="res/main/lib/gson-2.8.0.jar"/>
+	<classpathentry kind="lib" path="res/main/lib/controlsfx-8.40.12.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="target"/>
 </classpath>
