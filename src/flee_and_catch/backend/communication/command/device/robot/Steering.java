@@ -11,6 +11,10 @@ public class Steering {
 		this.direction = Direction.valueOf(pDirection).toString();
 		this.speed = Speed.valueOf(pSpeed).toString();	
 	}
+	public Steering(){
+		this.direction = Direction.StraightOn.toString();
+		this.speed = Speed.Equal.toString();	
+	}
 
 	public String getDirection() {
 		return direction;

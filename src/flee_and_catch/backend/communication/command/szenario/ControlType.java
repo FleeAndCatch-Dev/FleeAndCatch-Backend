@@ -1,5 +1,5 @@
 package flee_and_catch.backend.communication.command.szenario;
 
 public enum ControlType {
-	Undefinied, Begin, End, Start, Stop, Control
+	Undefinied, Begin, Start, Stop, Control
 }

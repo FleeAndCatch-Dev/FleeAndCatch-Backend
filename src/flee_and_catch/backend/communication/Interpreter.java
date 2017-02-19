@@ -17,11 +17,14 @@ import flee_and_catch.backend.communication.command.SynchronizationCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommandType;
 import flee_and_catch.backend.communication.command.SzenarioCommand;
 import flee_and_catch.backend.communication.command.SzenarioCommandType;
+import flee_and_catch.backend.communication.command.component.Direction;
 import flee_and_catch.backend.communication.command.component.IdentificationType;
+import flee_and_catch.backend.communication.command.component.Speed;
 import flee_and_catch.backend.communication.command.device.Device;
 import flee_and_catch.backend.communication.command.device.DeviceAdapter;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Steering;
 import flee_and_catch.backend.communication.command.szenario.Control;
 import flee_and_catch.backend.communication.command.szenario.ControlType;
 import flee_and_catch.backend.communication.command.szenario.Szenario;
@@ -284,6 +287,53 @@ public class Interpreter {
 				SzenarioCommand cmd = new SzenarioCommand(CommandType.Szenario.toString(), SzenarioCommandType.Init.toString(), client.getIdentification(), szenario);
 				Server.sendCmd(client, gson.toJson(cmd));
 				break;
+			case End:
+				//Set devices active -> false
+				for(int i=0;i<command.getSzenario().getRobots().size();i++){
+					RobotController.changeActive(command.getSzenario().getRobots().get(i), false);
+				}
+				for(int i=0;i<command.getSzenario().getApps().size();i++){
+					AppController.changeActive(command.getSzenario().getApps().get(i), false);
+				}	
+					
+				//Set the szenario to the clients of null
+				for(int i=0;i<Server.getClients().size();i++){
+					for(int j=0;j<command.getSzenario().getApps().size();j++){
+						if(Server.getClients().get(i).getDevice() instanceof App){
+							if(((App)Server.getClients().get(i).getDevice()).getIdentification().getId() == command.getSzenario().getApps().get(j).getIdentification().getId())
+								Server.getClients().get(i).setSzenario(null);
+						}
+					}
+				}
+				for(int i=0;i<Server.getClients().size();i++){
+					for(int j=0;j<command.getSzenario().getRobots().size();j++){
+						if(Server.getClients().get(i).getDevice() instanceof Robot){
+							if(((Robot)Server.getClients().get(i).getDevice()).getIdentification().getId() == command.getSzenario().getRobots().get(j).getIdentification().getId())
+								Server.getClients().get(i).setSzenario(null);
+						}
+					}
+				}
+				
+				//Remove szenario
+				Szenario szenario1 = null;
+				for(int i=0;i<SzenarioController.getSzenarios().size();i++){
+					if(SzenarioController.getSzenarios().get(i).getId() == command.getSzenario().getId())
+						szenario1 = SzenarioController.getSzenarios().get(i);
+				}
+				SzenarioController.remove(szenario1);		
+				
+				//Szenario control end from App
+				for(int i=0;i<Server.getClients().size();i++){
+					for(int j=0;j<command.getSzenario().getRobots().size();j++){
+						if(command.getSzenario().getRobots().get(j).getIdentification().getId() == Server.getClients().get(i).getIdentification().getId()){
+							//Send end command to all robots in the szenario
+							ControlCommand cmd1 = new ControlCommand(SzenarioCommandType.Control.toString(), command.getType(), client.getIdentification(), command.getSzenario().getRobots().get(j), new Steering());		
+							
+							Server.sendCmd(Server.getClients().get(i), gson.toJson(cmd1));
+						}
+					}
+				}
+				break;
 			case Control:
 				szenarioControl(command);
 				break;
@@ -348,42 +398,6 @@ public class Interpreter {
 					}
 				}
 					
-				break;
-			case End:
-				SzenarioController.remove(pCommand.getSzenario());
-				//Set devices active -> false
-				for(int i=0;i<pCommand.getSzenario().getRobots().size();i++){
-					RobotController.changeActive(pCommand.getSzenario().getRobots().get(i), false);
-				}
-				for(int i=0;i<pCommand.getSzenario().getApps().size();i++){
-					AppController.changeActive(pCommand.getSzenario().getApps().get(i), false);
-				}	
-					
-				//Set the szenario to the clients of null
-				for(int i=0;i<Server.getClients().size();i++){
-					for(int j=0;j<pCommand.getSzenario().getApps().size();j++){
-						if(Server.getClients().get(i).getDevice() instanceof App){
-							if(((App)Server.getClients().get(i).getDevice()).getIdentification().getId() == pCommand.getSzenario().getApps().get(j).getIdentification().getId())
-								Server.getClients().get(i).setSzenario(null);
-						}
-					}
-				}
-				for(int i=0;i<Server.getClients().size();i++){
-					for(int j=0;j<pCommand.getSzenario().getRobots().size();j++){
-						if(Server.getClients().get(i).getDevice() instanceof Robot){
-							if(((Robot)Server.getClients().get(i).getDevice()).getIdentification().getId() == pCommand.getSzenario().getRobots().get(j).getIdentification().getId())
-								Server.getClients().get(i).setSzenario(null);
-						}
-					}
-				}
-				
-				//Remove szenario
-				Szenario szenario = null;
-				for(int i=0;i<SzenarioController.getSzenarios().size();i++){
-					if(SzenarioController.getSzenarios().get(i).getId() == pCommand.getSzenario().getId())
-						szenario = SzenarioController.getSzenarios().get(i);
-				}
-				SzenarioController.remove(szenario);
 				break;
 			case Start:
 				//No implementation needed
