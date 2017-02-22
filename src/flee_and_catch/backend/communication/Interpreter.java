@@ -23,6 +23,8 @@ import flee_and_catch.backend.communication.command.device.DeviceAdapter;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.device.robot.Steering;
+import flee_and_catch.backend.communication.command.identification.Identification;
+import flee_and_catch.backend.communication.command.identification.IdentificationAdapter;
 import flee_and_catch.backend.communication.command.szenario.Control;
 import flee_and_catch.backend.communication.command.szenario.ControlType;
 import flee_and_catch.backend.communication.command.szenario.Szenario;
@@ -36,7 +38,6 @@ public class Interpreter {
 
 	private Client client;
 	private Gson gson;
-	
 	/**
 	 * <h1>Constructor</h1>
 	 * Create an object of the class interpreter.
@@ -48,6 +49,13 @@ public class Interpreter {
 	public Interpreter(Client pClient){
 		this.client = pClient;
 		this.gson = new Gson();
+		
+		/*GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(Identification.class, new IdentificationAdapter());
+		builder.registerTypeAdapter(Device.class, new DeviceAdapter());
+		builder.registerTypeAdapter(Szenario.class, new SzenarioAdapter());
+		builder.setPrettyPrinting();
+		this.gson = builder.create();*/
 	}
 
 	/**
@@ -95,9 +103,11 @@ public class Interpreter {
 	 */
 	private void connection(JSONObject pCommand) throws Exception {		
 		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(Identification.class, new IdentificationAdapter());
 		builder.registerTypeAdapter(Device.class, new DeviceAdapter());
 		builder.setPrettyPrinting();
-		Gson localgson = builder.create();		
+		Gson localgson = builder.create();
+		
 		ConnectionCommand command = localgson.fromJson(pCommand.toString(), ConnectionCommand.class);
 		
 		ConnectionCommandType type = ConnectionCommandType.valueOf(command.getType());		
@@ -176,11 +186,13 @@ public class Interpreter {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private void synchronization(JSONObject pCommand) throws Exception{		
+	private void synchronization(JSONObject pCommand) throws Exception{			
 		GsonBuilder builder = new GsonBuilder();
-		builder.registerTypeAdapter(Szenario.class, new SzenarioAdapter());
+		builder.registerTypeAdapter(Identification.class, new IdentificationAdapter());
+		builder.registerTypeAdapter(Device.class, new DeviceAdapter());
 		builder.setPrettyPrinting();
-		Gson localgson = builder.create();		
+		Gson localgson = builder.create();
+		
 		SynchronizationCommand command = localgson.fromJson(pCommand.toString(), SynchronizationCommand.class);
 		SynchronizationCommandType type = SynchronizationCommandType.valueOf(command.getType());
 		
@@ -266,11 +278,13 @@ public class Interpreter {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private void szenario(JSONObject pCommand) throws Exception{
+	private void szenario(JSONObject pCommand) throws Exception{	
 		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(Identification.class, new IdentificationAdapter());
 		builder.registerTypeAdapter(Szenario.class, new SzenarioAdapter());
 		builder.setPrettyPrinting();
-		Gson localgson = builder.create();			
+		Gson localgson = builder.create();
+		
 		SzenarioCommand command = localgson.fromJson(pCommand.toString(), SzenarioCommand.class);
 		
 		ViewController.increaseNoOfScenarioPackages();
@@ -417,11 +431,12 @@ public class Interpreter {
 	}
 	
 	private void exception(JSONObject pCommand) throws Exception {
-
 		GsonBuilder builder = new GsonBuilder();
+		builder.registerTypeAdapter(Identification.class, new IdentificationAdapter());
 		builder.registerTypeAdapter(Device.class, new DeviceAdapter());
 		builder.setPrettyPrinting();
-		Gson localgson = builder.create();				
+		Gson localgson = builder.create();
+		
 		ExceptionCommand command = localgson.fromJson(pCommand.toString(), ExceptionCommand.class);
 		
 		ExceptionCommandType type = ExceptionCommandType.valueOf(command.getType());

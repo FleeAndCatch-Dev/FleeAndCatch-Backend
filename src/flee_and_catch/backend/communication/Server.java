@@ -446,13 +446,13 @@ public final class Server {
 		
 		Client client = getClientOfId(pId);
 		if(client != null){
-			Gson gson = new Gson();
 			ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), pMessage, client.getDevice()));
 			Szenario szenario = getSzenarioOfClient(client);
 			if(szenario != null){
 				ArrayList<Client> szenarioMember = getSzenarioMember(szenario);
 				
 				for(int i=0; i<szenarioMember.size(); i++){
+					Gson gson = new Gson();
 					Server.sendCmd(szenarioMember.get(i), gson.toJson(cmd));
 				}
 				
