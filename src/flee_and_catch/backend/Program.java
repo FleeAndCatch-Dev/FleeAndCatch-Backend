@@ -1,6 +1,5 @@
 package flee_and_catch.backend;
 
-import java.io.IOException;
 import flee_and_catch.backend.communication.Server;
 import flee_and_catch.backend.view.ViewController;
 
@@ -23,7 +22,7 @@ public class Program {
 				ViewController.init(true);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("100 " + e.getMessage());
 			}
 		}
 		else {
@@ -31,19 +30,13 @@ public class Program {
 				ViewController.init(false);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("100 " + e.getMessage());
 			}
 		}
 		
 		ViewController.show();
 		
-		
-		try {
-			Server.open();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		Server.open();
 	}
 
 }
