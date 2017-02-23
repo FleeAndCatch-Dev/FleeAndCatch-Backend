@@ -42,7 +42,6 @@ public final class Server {
 	private static ServerSocket serverSocket;
 	private static ArrayList<Client> clients = new ArrayList<Client>();
 	private static Lock clientsLock = new ReentrantLock();
-	private static Socket socket;
 	
 	/* Method that identifies the IP addresses of the maschine 
        - Must be not LoopBack!
@@ -90,7 +89,11 @@ public final class Server {
 				
 				@Override
 				public void run() {
-					listen();
+					try {
+						listen();
+					} catch (IOException e) {
+						System.out.println("102 " + e.getMessage());
+					}
 				}
 			});
 			listenerThread.start();
@@ -121,7 +124,11 @@ public final class Server {
 				
 				@Override
 				public void run() {
-					listen();
+					try {
+						listen();
+					} catch (IOException e) {
+						System.out.println("102 " + e.getMessage());
+					}
 				}
 			});
 			listenerThread.start();
@@ -137,18 +144,13 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private static void listen() {
+	private static void listen() throws IOException {
 		
 		opened = true;
 		while(opened){
 			ViewController.setStatus(Status.Waiting);;
 			
-			socket = null;
-			try {
-				socket = serverSocket.accept();
-			} catch (IOException e) {
-				System.out.println("102 " + e.getMessage());
-			}
+			Socket socket = serverSocket.accept();
 			if(socket != null){
 				try {
 					socket.setTcpNoDelay(true);
@@ -172,13 +174,15 @@ public final class Server {
 							} catch (Exception e1) {
 								System.out.println("105 " + e1.getMessage());
 							}
+						} catch (IOException e) {
+							System.out.println("106 " + e.getMessage());
 						}
 					}
 				});
 				clientThread.start();
-				return;
 			}
-			System.out.println("103 " + "The socket is null");
+			else
+				System.out.println("103 " + "The socket is null");
 		}
 	}
 
@@ -192,16 +196,12 @@ public final class Server {
 	 * @throws Exception
 	 * 
 	 * @author ThunderSL94
+	 * @throws IOException 
 	 */
-	private static void newClient(Socket pSocket, int pId) throws SocketException {
-		BufferedReader bufferedReader = null;
-		DataOutputStream outputStream = null;
-		try {
-			bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
-			outputStream = new DataOutputStream(pSocket.getOutputStream());
-		} catch (IOException e) {
-			System.out.println("106 " + e.getMessage());
-		}
+	private static void newClient(Socket pSocket, int pId) throws IOException {
+		
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
+		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
 		if(outputStream != null && bufferedReader != null){
 			//Set status message:
