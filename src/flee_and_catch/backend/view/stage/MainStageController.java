@@ -473,6 +473,7 @@ public class MainStageController {
 		
 	}
 	
+	
 	private class ShowStatusThread extends Thread {
 		
 		@Override
@@ -758,6 +759,10 @@ public class MainStageController {
 		int noOfDP = Integer.parseInt(this.res.lblStbPackagesDisconnectValue.getValue());
 		noOfDP++;
 		this.res.lblStbPackagesDisconnectValue.setValue(String.valueOf(noOfDP));
+	}
+	
+	public void printDebugLine(String string) {
+		this.view.txaDebugInfo.setText(this.view.txaDebugInfo.getText() + "\n" + string);
 	}
 	
 //##########################################################################################################################################	

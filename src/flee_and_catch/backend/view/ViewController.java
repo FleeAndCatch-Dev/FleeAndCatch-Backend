@@ -174,6 +174,15 @@ public class ViewController {
 		
 	}
 	
+	public static void printDebugLine(String string) {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+				
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.printDebugLine(string);;
+		}});
+	}
+	
 //##########################################################################################################################################
 }
 //### EOF ##################################################################################################################################
