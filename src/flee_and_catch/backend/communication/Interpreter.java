@@ -38,6 +38,7 @@ public class Interpreter {
 
 	private Client client;
 	private Gson gson;
+	private long initClock;
 	/**
 	 * <h1>Constructor</h1>
 	 * Create an object of the class interpreter.
@@ -115,33 +116,16 @@ public class Interpreter {
 		
 		switch(type){
 			case Connect:
+				//Start connection of device
 				ViewController.increaseNoOfConnectPackages();
-				//Set id and update object instances
-				switch (IdentificationType.valueOf(command.getIdentification().getType())) {
-				case App:		
-					App app = (App)command.getDevice();
-					app.getIdentification().setId(client.getIdentification().getId());
-					command.getIdentification().setId(client.getIdentification().getId());
-					client.setIdentification(command.getIdentification());
-					client.setDevice(app);
-					AppController.addNew(app);
-					break;
-				case Robot:
-					Robot robot = (Robot)command.getDevice();
-					robot.getIdentification().setId(client.getIdentification().getId());
-					command.getIdentification().setId(client.getIdentification().getId());
-					client.setIdentification(command.getIdentification());
-					client.setDevice(robot);
-					RobotController.addNew(robot);
-					break;
-				default:
-					System.out.println("117 " + "Wrong identification type of device");
-					break;
-				}	
-				command = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Connect.toString(), client.getIdentification(), client.getDevice());
+				
+				initClock = System.currentTimeMillis();
+				
+				command = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Init.toString(), client.getIdentification(), client.getDevice());
 				Server.sendCmd(client, gson.toJson(command));
 				return;
 			case Disconnect:
+				//Disconnect device
 				ViewController.increaseNoOfDisconnectPackages();
 				ConnectionCommand cmd = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Disconnect.toString(), client.getIdentification(), command.getDevice());				
 				Server.sendCmd(client, gson.toJson(cmd));
@@ -174,6 +158,42 @@ public class Interpreter {
 					break;
 				}
 				Server.removeClient(client);
+				return;
+			case Init:
+				//Initialization of device
+				long time = System.currentTimeMillis() - initClock;
+				if(time <= 100){
+					//Set id and update object instances
+					switch (IdentificationType.valueOf(command.getIdentification().getType())) {
+					case App:		
+						App app = (App)command.getDevice();
+						app.getIdentification().setId(client.getIdentification().getId());
+						command.getIdentification().setId(client.getIdentification().getId());
+						client.setIdentification(command.getIdentification());
+						client.setDevice(app);
+						AppController.addNew(app);
+						break;
+					case Robot:
+						Robot robot = (Robot)command.getDevice();
+						robot.getIdentification().setId(client.getIdentification().getId());
+						command.getIdentification().setId(client.getIdentification().getId());
+						client.setIdentification(command.getIdentification());
+						client.setDevice(robot);
+						RobotController.addNew(robot);
+						break;
+					default:
+						System.out.println("117 " + "Wrong identification type of device");
+						break;
+					}	
+					command = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Connect.toString(), client.getIdentification(), client.getDevice());
+					Server.sendCmd(client, gson.toJson(command));
+				}
+				else {
+					initClock = System.currentTimeMillis();
+					
+					command = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Init.toString(), client.getIdentification(), client.getDevice());
+					Server.sendCmd(client, gson.toJson(command));
+				}
 				return;
 			default:
 				System.out.println("118 " + "Wrong connection type of json command");
