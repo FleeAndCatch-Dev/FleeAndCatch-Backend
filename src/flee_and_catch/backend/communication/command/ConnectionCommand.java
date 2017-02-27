@@ -20,7 +20,7 @@ public class ConnectionCommand extends Command {
 		super(pId, pType, pIdentification);
 		this.device = pDevice;
 	}
-
+	
 	public Device getDevice() {
 		return device;
 	}	

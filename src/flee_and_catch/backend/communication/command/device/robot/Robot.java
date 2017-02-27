@@ -7,7 +7,7 @@ public class Robot extends Device {
 	
 	protected RobotIdentification identification;
 	protected Position position;
-	protected String speed;
+	protected double speed;
 	protected String ultrasonic;
 	protected String gyro;
 	
@@ -15,7 +15,7 @@ public class Robot extends Device {
 		super(false);
 		this.identification = pIdentification;
 		this.position = pPosition;
-		this.speed = Double.toString(pSpeed);
+		this.speed = pSpeed;
 		this.ultrasonic = Double.toString(pUltrasonic);
 		this.gyro = Double.toString(pGyro);
 	}
@@ -24,7 +24,7 @@ public class Robot extends Device {
 		super(pActive);
 		this.identification = pIdentification;
 		this.position = pPosition;
-		this.speed = Double.toString(pSpeed);
+		this.speed = pSpeed;
 		this.ultrasonic = Double.toString(pUltrasonic);
 		this.gyro = Double.toString(pGyro);
 	}
@@ -46,7 +46,7 @@ public class Robot extends Device {
 		return position;
 	}
 
-	public String getSpeed() {
+	public double getSpeed() {
 		return speed;
 	}
 
