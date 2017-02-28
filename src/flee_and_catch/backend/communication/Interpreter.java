@@ -23,6 +23,7 @@ import flee_and_catch.backend.communication.command.device.Device;
 import flee_and_catch.backend.communication.command.device.DeviceAdapter;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.exception.Exception;
 import flee_and_catch.backend.communication.command.identification.IdentificationType;
 import flee_and_catch.backend.communication.command.szenario.Control;
 import flee_and_catch.backend.communication.command.szenario.ControlType;
@@ -310,10 +311,26 @@ public class Interpreter {
 		
 		switch (type) {
 			case Init:
-				//Add the szenario and generate new id
-				Szenario szenario = SzenarioController.addNew(command.getSzenario());
-				
-				SzenarioCommand cmd = new SzenarioCommand(CommandType.Szenario.toString(), SzenarioCommandType.Init.toString(), client.getIdentification(), szenario);
+				boolean check = true;
+				for(int i=0;i<RobotController.getRobots().size();i++){
+					for(int j=0;j<command.getSzenario().getRobots().size();j++){
+						if(RobotController.getRobots().get(i).getIdentification().getId() == command.getSzenario().getRobots().get(j).getIdentification().getId() && RobotController.getRobots().get(i).isActive()){
+							check = false;
+							break;
+						}
+					}
+				}
+				if(check){
+					//Create of szenario is successful
+					//Add the szenario and generate new id
+					Szenario szenario = SzenarioController.addNew(command.getSzenario());
+					
+					SzenarioCommand cmd = new SzenarioCommand(CommandType.Szenario.toString(), SzenarioCommandType.Init.toString(), client.getIdentification(), szenario);
+					Server.sendCmd(client, gson.toJson(cmd));
+					return;	
+				}
+				//Create of szenario failed
+				ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.CreateSzenario.toString(), client.getIdentification(), new Exception(ExceptionCommandType.CreateSzenario.toString(), "The szenario could not create", client.getDevice()));
 				Server.sendCmd(client, gson.toJson(cmd));
 				return;
 			case End:

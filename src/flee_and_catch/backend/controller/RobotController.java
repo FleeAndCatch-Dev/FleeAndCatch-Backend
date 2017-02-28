@@ -12,12 +12,14 @@ public final class RobotController {
 	private static Lock robotsLock = new ReentrantLock();
 
 	public static void changeActive(Robot pRobot, boolean pState){
+		robotsLock.lock();
 		for(int i=0; i<RobotController.getRobots().size(); i++){
 			if(RobotController.getRobots().get(i).getIdentification().getId() == pRobot.getIdentification().getId()){
 				//Check if robots equal
 				RobotController.getRobots().get(i).setActive(pState);
 			}
 		}
+		robotsLock.unlock();
 	}
 	
 	public static void addNew(Robot pRobot){		
