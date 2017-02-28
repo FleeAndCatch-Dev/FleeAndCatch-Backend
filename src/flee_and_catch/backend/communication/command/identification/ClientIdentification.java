@@ -1,7 +1,5 @@
 package flee_and_catch.backend.communication.command.identification;
 
-import flee_and_catch.backend.communication.command.component.IdentificationType;
-
 public class ClientIdentification extends Identification {
 
 	private String address;

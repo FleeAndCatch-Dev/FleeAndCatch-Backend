@@ -24,10 +24,10 @@ import com.google.gson.Gson;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.ExceptionCommand;
 import flee_and_catch.backend.communication.command.ExceptionCommandType;
-import flee_and_catch.backend.communication.command.component.IdentificationType;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.identification.IdentificationType;
 import flee_and_catch.backend.communication.command.szenario.Szenario;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
@@ -430,38 +430,7 @@ public final class Server {
 		return client;
 	}	
 	
-	public static Szenario getSzenarioOfClient(Client pClient){
-		//Is the current device in a szenario
-		Szenario szenario = null;
-		IdentificationType type = IdentificationType.valueOf(pClient.getIdentification().getType());
-		for(int i=0; i<SzenarioController.getSzenarios().size(); i++){
-			switch (type) {
-				case App:
-					App app = (App)pClient.getDevice();
-					for(int j=0; j<SzenarioController.getSzenarios().get(i).getApps().size(); j++){
-						if(app.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getApps().get(j).getIdentification().getId()){
-							szenario = SzenarioController.getSzenarios().get(i);
-							break;
-						}
-					}
-					break;
-				case Robot:
-					Robot robot = (Robot)pClient.getDevice();
-					for(int j=0; j<SzenarioController.getSzenarios().get(i).getRobots().size(); j++){
-						if(robot.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId()){
-							szenario = SzenarioController.getSzenarios().get(i);
-							break;
-						}
-					}
-					break;
-				default:
-					break;
-			}
-		}
-		return szenario;
-	}
-	
-	public static ArrayList<Client> getSzenarioMember(Szenario pSzenario){
+	public static ArrayList<Client> getClientSzenarioMember(Szenario pSzenario){
 		ArrayList<Client> szenarioMember = new ArrayList<Client>();
 		
 		for(int i=0; i<pSzenario.getApps().size(); i++){
@@ -489,20 +458,17 @@ public final class Server {
 		Client client = getClientOfId(pId);
 		if(client != null){
 			ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), pMessage, client.getDevice()));
-			Szenario szenario = getSzenarioOfClient(client);
+			Szenario szenario = SzenarioController.getSzenarioOfDevice(client.getIdentification().getId(), IdentificationType.valueOf(client.getIdentification().getType()));
 			if(szenario != null){
-				ArrayList<Client> szenarioMember = getSzenarioMember(szenario);
+				ArrayList<Client> szenarioMember = getClientSzenarioMember(szenario);
 				
 				for(int i=0; i<szenarioMember.size(); i++){
 					Gson gson = new Gson();
 					Server.sendCmd(szenarioMember.get(i), gson.toJson(cmd));
 				}
-				
-				
+								
 				//Remove from szenariolist
-				ArrayList<Szenario> szenarioList = new ArrayList<Szenario>(SzenarioController.getSzenarios());
-				szenarioList.remove(szenario);
-				SzenarioController.setSzenarios(szenarioList);
+				SzenarioController.remove(szenario);
 			}
 			IdentificationType type = IdentificationType.valueOf(client.getIdentification().getType());
 			//Remove device from controller

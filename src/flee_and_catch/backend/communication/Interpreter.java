@@ -19,12 +19,11 @@ import flee_and_catch.backend.communication.command.SynchronizationCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommandType;
 import flee_and_catch.backend.communication.command.SzenarioCommand;
 import flee_and_catch.backend.communication.command.SzenarioCommandType;
-import flee_and_catch.backend.communication.command.component.IdentificationType;
 import flee_and_catch.backend.communication.command.device.Device;
 import flee_and_catch.backend.communication.command.device.DeviceAdapter;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
-import flee_and_catch.backend.communication.command.device.robot.Steering;
+import flee_and_catch.backend.communication.command.identification.IdentificationType;
 import flee_and_catch.backend.communication.command.szenario.Control;
 import flee_and_catch.backend.communication.command.szenario.ControlType;
 import flee_and_catch.backend.communication.command.szenario.Szenario;
@@ -162,7 +161,7 @@ public class Interpreter {
 			case Init:
 				//Initialization of device
 				long time = System.currentTimeMillis() - initClock;
-				if(time <= 100){
+				if(time <= 80){
 					//Set id and update object instances
 					switch (IdentificationType.valueOf(command.getIdentification().getType())) {
 					case App:		
@@ -234,15 +233,7 @@ public class Interpreter {
 			//New update from a robot
 			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot){
 				//Get the szenario of the robot
-				Szenario szenario = null;
-				for(int i=0;i<SzenarioController.getSzenarios().size();i++){
-					for(int j=0;j<SzenarioController.getSzenarios().get(i).getRobots().size();j++){
-						if(SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId() == command.getIdentification().getId()){
-							szenario = SzenarioController.getSzenarios().get(i);
-							break;
-						}
-					}
-				}
+				Szenario szenario = SzenarioController.getSzenarioOfDevice(command.getIdentification().getId(), IdentificationType.valueOf(command.getIdentification().getType()));
 				if(szenario != null){
 					//Update the szenario
 					for(int i=0;i<szenario.getRobots().size();i++){
@@ -326,56 +317,7 @@ public class Interpreter {
 				Server.sendCmd(client, gson.toJson(cmd));
 				return;
 			case End:
-				//Set devices active -> false
-				for(int i=0;i<command.getSzenario().getRobots().size();i++){
-					RobotController.changeActive(command.getSzenario().getRobots().get(i), false);
-				}
-				for(int i=0;i<command.getSzenario().getApps().size();i++){
-					AppController.changeActive(command.getSzenario().getApps().get(i), false);
-				}	
-					
-				//Set the szenario to the clients of null
-				for(int i=0;i<Server.getClients().size();i++){
-					for(int j=0;j<command.getSzenario().getApps().size();j++){
-						if(Server.getClients().get(i).getDevice() instanceof App){
-							if(((App)Server.getClients().get(i).getDevice()).getIdentification().getId() == command.getSzenario().getApps().get(j).getIdentification().getId())
-								Server.getClients().get(i).setSzenario(null);
-						}
-					}
-				}
-				for(int i=0;i<Server.getClients().size();i++){
-					for(int j=0;j<command.getSzenario().getRobots().size();j++){
-						if(Server.getClients().get(i).getDevice() instanceof Robot){
-							if(((Robot)Server.getClients().get(i).getDevice()).getIdentification().getId() == command.getSzenario().getRobots().get(j).getIdentification().getId())
-								Server.getClients().get(i).setSzenario(null);
-						}
-					}
-				}
-				
-				//Remove szenario
-				Szenario szenario1 = null;
-				for(int i=0;i<SzenarioController.getSzenarios().size();i++){
-					if(SzenarioController.getSzenarios().get(i).getId() == command.getSzenario().getId())
-						szenario1 = SzenarioController.getSzenarios().get(i);
-				}
-				if(szenario1 != null){
-					SzenarioController.remove(szenario1);		
-					
-					//Szenario control end from App
-					for(int i=0;i<Server.getClients().size();i++){
-						for(int j=0;j<command.getSzenario().getRobots().size();j++){
-							if(command.getSzenario().getRobots().get(j).getIdentification().getId() == Server.getClients().get(i).getIdentification().getId()){
-								//Send end command to all robots in the szenario
-								ControlCommand cmd1 = new ControlCommand(SzenarioCommandType.Control.toString(), command.getType(), client.getIdentification(), command.getSzenario().getRobots().get(j), new Steering());		
-								
-								Server.sendCmd(Server.getClients().get(i), gson.toJson(cmd1));
-							}
-						}
-					}
-					return;
-				}
-				System.out.println("124 " + "This senario doesn't exist");
-				return;
+				SzenarioController.close(client, command.getSzenario());
 			case Control:
 				szenarioControl(command);
 				return;
@@ -479,7 +421,7 @@ public class Interpreter {
 				Server.handleDisconnection(command.getIdentification().getId(), "Device is disconnecting");
 				break;
 			default:
-				System.out.println("128 " + "Wrong exception type og json command");
+				System.out.println("128 " + "Wrong exception type of json command");
 				return;
 		}
 	}
