@@ -327,7 +327,13 @@ public final class Server {
 				return null;
 			}
 		} catch (IOException e) {
-			System.out.println("109 " + e.getMessage());
+			//Device is disconnecting
+			try {
+				handleDisconnection(pClient.getIdentification().getId(), e.getMessage());
+			} catch (Exception e1) {
+				System.out.println("105 " + e1.getMessage());
+			}
+			//System.out.println("109 " + e.getMessage());
 		}
 		return null;
 	}
