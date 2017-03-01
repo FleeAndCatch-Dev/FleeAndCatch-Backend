@@ -331,7 +331,7 @@ public final class Server {
 			try {
 				handleDisconnection(pClient.getIdentification().getId(), e.getMessage());
 			} catch (Exception e1) {
-				System.out.println("105 " + e1.getMessage());
+				System.out.println("new " + e1.getMessage());
 			}
 			//System.out.println("109 " + e.getMessage());
 		}

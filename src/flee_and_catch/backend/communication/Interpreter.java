@@ -191,6 +191,7 @@ public class Interpreter {
 				else {
 					initClock = System.currentTimeMillis();
 					
+					//Send new init command
 					command = new ConnectionCommand(CommandType.Connection.toString(), ConnectionCommandType.Init.toString(), client.getIdentification(), client.getDevice());
 					Server.sendCmd(client, gson.toJson(command));
 				}
@@ -260,6 +261,7 @@ public class Interpreter {
 			}
 			return;
 		case AllSzenarios:
+			//Send the app the update date of all szenarios
 			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
 				SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.AllSzenarios.toString(), client.getIdentification(), SzenarioController.getSzenarios(), new ArrayList<Robot>());
 				Server.sendCmd(client, gson.toJson(cmd));
@@ -268,6 +270,7 @@ public class Interpreter {
 			System.out.println("120 " + "A robot can not get a list of szenarios");
 			return;
 		case CurrentSzenario:
+			//Send the app the update data of the senario
 			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.App){
 				ArrayList<Szenario> szenarios = new ArrayList<Szenario>();
 				Szenario szenario = null;
