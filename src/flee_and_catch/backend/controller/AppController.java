@@ -13,13 +13,17 @@ public final class AppController {
 	private static Lock appsLock = new ReentrantLock();
 
 	public static void changeActive(App pApp, boolean pState){
+		appsLock.lock();
 		pApp.setActive(pState);
 		for(int i=0; i<AppController.getApps().size(); i++){
 			if(AppController.getApps().get(i).getIdentification().getId() == pApp.getIdentification().getId()){
 				//Check if robots equal
 				AppController.getApps().get(i).setActive(pState);
+				if(!pState)
+					AppController.getApps().get(i).setRobotId(-1);
 			}
 		}
+		appsLock.unlock();
 	}
 	
 	public static void addNew(App pApp){		

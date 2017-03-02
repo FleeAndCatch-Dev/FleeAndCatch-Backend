@@ -1,8 +1,5 @@
 package flee_and_catch.backend.communication.command.device.robot;
 
-import flee_and_catch.backend.communication.command.component.Direction;
-import flee_and_catch.backend.communication.command.component.Speed;
-
 public class Steering {
 	private String direction;
 	private String speed;

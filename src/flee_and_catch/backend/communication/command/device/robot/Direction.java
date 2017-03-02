@@ -1,7 +1,7 @@
-package flee_and_catch.backend.communication.command.component;
+package flee_and_catch.backend.communication.command.device.robot;
 
 public enum Direction {
-
+	
 	Left (-1),
 	StraightOn (0),
 	Right (1);
