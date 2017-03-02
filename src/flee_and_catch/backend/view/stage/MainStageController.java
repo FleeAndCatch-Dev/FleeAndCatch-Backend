@@ -13,8 +13,10 @@ import flee_and_catch.backend.communication.Client;
 import flee_and_catch.backend.communication.Server;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.szenario.Szenario;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
+import flee_and_catch.backend.controller.SzenarioController;
 import flee_and_catch.backend.view.Status;
 import flee_and_catch.backend.view.stage.components.CustomeRotateTransition;
 import javafx.animation.Animation;
@@ -303,6 +305,9 @@ public class MainStageController {
 			else if(Pattern.matches(res.triRobotText+ "[0-9]+", curItem.getValue())) {
 				MainStageController.this.showRobotInfo(Integer.parseInt(curItem.getValue().substring(10)));
 			}
+			else if(Pattern.matches(res.triScenariosText + "[0-9]+", curItem.getValue())) {
+				MainStageController.this.showScenarioInfo(Integer.parseInt(curItem.getValue().substring(13)));
+			}
 			else {
 				MainStageController.this.clearInfo();
 			}
@@ -473,7 +478,11 @@ public class MainStageController {
 		
 	}
 	
-	
+	/* ShowStatusThread [class]: Thread that updates the status of the status bar of the stage *//**
+	 * 
+	 * @author mbothner
+	 *
+	 */
 	private class ShowStatusThread extends Thread {
 		
 		@Override
@@ -495,13 +504,13 @@ public class MainStageController {
 							case Nothing:
 								break;
 							case Connected:
-								MainStageController.this.setStatusToDeviceConnected();
+								MainStageController.this.processStatusToDeviceConnected();
 								break;
 							case Disconnected:
-								MainStageController.this.setStatusToDeviceDisconnected();
+								MainStageController.this.processStatusToDeviceDisconnected();
 								break;
 							case Waiting:
-								MainStageController.this.setStatusToWaitingForDevices();
+								MainStageController.this.processStatusToWaitingForDevices();
 								break;
 							default:
 								break;
@@ -551,6 +560,38 @@ public class MainStageController {
 		else {
 			this.view.cmiSound.setGraphic(new ImageView(this.res.soundMuteIcon16x16));
 		}
+	}
+	
+	private void processStatusToWaitingForDevices() {
+		this.curState = Status.Waiting;
+		this.view.stbStatusBar.setGraphic(this.view.imvScanning);
+		this.view.sqtWaiting.play();
+		this.view.stbStatusBar.setText(res.stbMsgScanning);
+		
+	}
+	
+	private void processStatusToDeviceConnected() {
+		this.curState = Status.Connected;
+		if(this.res.soundOn.getValue()) {
+			Media sound = new Media(res.deviceConnectedSound.toURI().toString());
+			MediaPlayer mediaPlayer = new MediaPlayer(sound);
+			mediaPlayer.play();
+		}
+		this.view.stbStatusBar.setText(this.res.stbMsgDeviceConnected);
+		this.view.stbStatusBar.setGraphic(this.view.imvConnected);
+		this.view.rttConnected.play();
+	}
+	
+	private void processStatusToDeviceDisconnected() {
+		this.curState = Status.Disconnected;
+		if(this.res.soundOn.getValue()) {
+			Media sound = new Media(res.deviceDisconnectedSound.toURI().toString());
+			MediaPlayer mediaPlayer = new MediaPlayer(sound);
+			mediaPlayer.play();
+		}
+		this.view.stbStatusBar.setText(this.res.stbMsgDeviceDisconnected);
+		this.view.stbStatusBar.setGraphic(this.view.imvDisconnected);
+		this.view.rttDisconnected.play();
 	}
 	
 	private void showAppInfo(int deviceID) {
@@ -618,6 +659,10 @@ public class MainStageController {
 		this.view.txaDeviceInfo.setText(infoText);
 	}
 	
+	private void showScenarioInfo(int scenarioID) {
+		
+	}
+	
 	private void clearInfo() {
 		this.view.txaDeviceInfo.setText("");
 	}
@@ -650,6 +695,8 @@ public class MainStageController {
 		this.view.adjustComponents();	//Adjust components after stage is build (shown)!
 		this.dcpt.start();
 	}
+	
+	//### Methods to set general info ##########################################
 	
 	public void setBackendIPAddress(String address) {
 		this.view.lblIPAddValue.setText(address);
@@ -695,42 +742,30 @@ public class MainStageController {
 		}
 	}
 	
+	public void setNumberOfScenarios(int scenarios) {
+		
+		this.view.lblScenariosValue.setText(String.valueOf(scenarios));
+		this.view.triScenarios.setValue(this.res.triScenariosText + " (" + scenarios + ")");
+		
+		List<Szenario> scenarioList = (ArrayList<Szenario>) SzenarioController.getSzenarios();
+		
+		this.view.triScenarios.getChildren().clear();
+			
+		for(Szenario scenario : scenarioList) {
+			TreeItem<String> triScenario = new TreeItem<String>(res.triScenarioText + scenario.getId());
+			triScenario.addEventHandler(ActionEvent.ACTION, this.aeh);
+			this.view.triAllRobots.getChildren().add(triScenario);
+		}
+	}
+	
+	//### Methods for status line ##############################################
+	
 	public void setStatus(Status status) {
 		this.proStates.add(0, status);
 	}
-	
-	public void setStatusToWaitingForDevices() {
-		this.curState = Status.Waiting;
-		this.view.stbStatusBar.setGraphic(this.view.imvScanning);
-		this.view.sqtWaiting.play();
-		this.view.stbStatusBar.setText(res.stbMsgScanning);
-		
-	}
-	
-	public void setStatusToDeviceConnected() {
-		this.curState = Status.Connected;
-		if(this.res.soundOn.getValue()) {
-			Media sound = new Media(res.deviceConnectedSound.toURI().toString());
-			MediaPlayer mediaPlayer = new MediaPlayer(sound);
-			mediaPlayer.play();
-		}
-		this.view.stbStatusBar.setText(this.res.stbMsgDeviceConnected);
-		this.view.stbStatusBar.setGraphic(this.view.imvConnected);
-		this.view.rttConnected.play();
-	}
-	
-	public void setStatusToDeviceDisconnected() {
-		this.curState = Status.Disconnected;
-		if(this.res.soundOn.getValue()) {
-			Media sound = new Media(res.deviceDisconnectedSound.toURI().toString());
-			MediaPlayer mediaPlayer = new MediaPlayer(sound);
-			mediaPlayer.play();
-		}
-		this.view.stbStatusBar.setText(this.res.stbMsgDeviceDisconnected);
-		this.view.stbStatusBar.setGraphic(this.view.imvDisconnected);
-		this.view.rttDisconnected.play();
-	}
 
+	//### Methods for packet counters ##########################################
+	
 	public void increaseNoOfSyncPackages() {
 		int noOfSP = Integer.parseInt(this.res.lblStbPackagesSyncValue.getValue());
 		noOfSP++;
@@ -761,9 +796,39 @@ public class MainStageController {
 		this.res.lblStbPackagesDisconnectValue.setValue(String.valueOf(noOfDP));
 	}
 	
+	//### Methods to update sensor and control data ############################
+	
+	public void updateSensorData(int deviceID) {
+		
+		TreeItem<String> curItem = MainStageController.this.view.trvDeviceTree.getSelectionModel().getSelectedItem();
+		
+		//If a robot is selected in the list:
+		if(Pattern.matches(res.triRobotText + "[0-9]+", curItem.getValue())) {
+			//If the right number (robot-id) is selected in the list:
+			if(deviceID == Integer.parseInt(curItem.getValue().substring(10))) {
+				
+			}
+		}
+
+	}
+	
+	public void updateControlData(int deviceID) {
+		
+		TreeItem<String> curItem = MainStageController.this.view.trvDeviceTree.getSelectionModel().getSelectedItem();
+		
+		if(Pattern.matches(res.triAppText + "[0-9]+", curItem.getValue())) {
+			//If the right number (robot-id) is selected in the list:
+			if(deviceID == Integer.parseInt(curItem.getValue().substring(10))) {
+				
+			}
+		}
+		
+	}
+	
 	public void printDebugLine(String string) {
 		this.view.txaDebugInfo.setText(this.view.txaDebugInfo.getText() + "\n" + string);
 	}
+	
 	
 //##########################################################################################################################################	
 }
