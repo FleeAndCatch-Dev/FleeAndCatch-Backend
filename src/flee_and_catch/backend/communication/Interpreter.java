@@ -162,7 +162,7 @@ public class Interpreter {
 			case Init:
 				//Initialization of device
 				long time = System.currentTimeMillis() - initClock;
-				if(time <= 80){
+				if(time <= 120){
 					//Set id and update object instances
 					switch (IdentificationType.valueOf(command.getIdentification().getType())) {
 					case App:		
@@ -410,6 +410,10 @@ public class Interpreter {
 				//No implementation needed
 				break;
 			case Control:
+				int deviceID = pCommand.getIdentification().getId();
+				Control control = (Control) pCommand.getSzenario();
+				String controlCmd = control.getSteering().toString();
+				ViewController.updateControlData(deviceID, controlCmd);
 				//No implementation needed
 				break;
 			default:

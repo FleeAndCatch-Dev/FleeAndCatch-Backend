@@ -18,6 +18,7 @@ import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.device.robot.Steering;
 import flee_and_catch.backend.communication.command.identification.IdentificationType;
 import flee_and_catch.backend.communication.command.szenario.Szenario;
+import flee_and_catch.backend.view.ViewController;
 
 public final class SzenarioController {
 	private static ArrayList<Szenario> szenarios = new ArrayList<Szenario>();
@@ -52,6 +53,7 @@ public final class SzenarioController {
 		szenarios.add(pSzenario);
 		szenariosLock.unlock();
 		
+		ViewController.setNumberOfScenarios(szenarios.size());
 		return pSzenario;
 	}	
 	public static void close(Client pClient, Szenario pSzenario){
@@ -130,6 +132,7 @@ public final class SzenarioController {
 		szenariosLock.lock();
 		szenarios.remove(pSzenario);
 		szenariosLock.unlock();
+		ViewController.setNumberOfScenarios(szenarios.size());
 	}
 	
 	public static Szenario getSzenarioOfDevice(int pId, IdentificationType pType){

@@ -115,12 +115,31 @@ public class ViewController {
 		}});
 	}
 	
+	public static void setNumberOfScenarios(final int scenarios) {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+				
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.setNumberOfScenarios(scenarios);;
+		}});
+	}
+	
 	public static void setStatus(final Status state) {
 		//If the View is not activated:
 		if(!ViewController.active) { return; }
 		
 		Platform.runLater(new Runnable() { @Override public void run() {
 			ViewController.mainStage.setStatus(state);;
+		}});
+	}
+	
+	
+	public static void updateControlData(int deviceID, String controlCmd) {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+		
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.updateControlData(deviceID, controlCmd);
 		}});
 	}
 	

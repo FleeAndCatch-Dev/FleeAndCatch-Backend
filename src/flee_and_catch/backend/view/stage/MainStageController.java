@@ -305,7 +305,7 @@ public class MainStageController {
 			else if(Pattern.matches(res.triRobotText+ "[0-9]+", curItem.getValue())) {
 				MainStageController.this.showRobotInfo(Integer.parseInt(curItem.getValue().substring(10)));
 			}
-			else if(Pattern.matches(res.triScenariosText + "[0-9]+", curItem.getValue())) {
+			else if(Pattern.matches(res.triScenarioText + "[0-9]+", curItem.getValue())) {
 				MainStageController.this.showScenarioInfo(Integer.parseInt(curItem.getValue().substring(13)));
 			}
 			else {
@@ -661,6 +661,26 @@ public class MainStageController {
 	
 	private void showScenarioInfo(int scenarioID) {
 		
+		String infoText = "Scenario Info:\n";
+		
+		for(Szenario scenario : SzenarioController.getSzenarios()) {
+			if(scenario.getId() == scenarioID) {
+				infoText += "ID: " + scenario.getId() + "\n";
+				infoText += "Type: " + scenario.getType() + "\n";
+				infoText += "Mode: " + scenario.getMode() + "\n";
+				infoText += "Command: " + scenario.getCommand() + "\n";
+				infoText += "Involved Robots:\n";
+				for(Robot robot : scenario.getRobots()) {
+					infoText += "ID: " + robot.getIdentification().getId() + "\n";
+				}
+				infoText += "Involved Apps:\n";
+				for(App app : scenario.getApps()) {
+					infoText += "ID: " + app.getIdentification().getId() + "\n";
+				}
+			}
+		}
+		this.view.txaDeviceInfo.setText(infoText);
+		
 	}
 	
 	private void clearInfo() {
@@ -754,7 +774,7 @@ public class MainStageController {
 		for(Szenario scenario : scenarioList) {
 			TreeItem<String> triScenario = new TreeItem<String>(res.triScenarioText + scenario.getId());
 			triScenario.addEventHandler(ActionEvent.ACTION, this.aeh);
-			this.view.triAllRobots.getChildren().add(triScenario);
+			this.view.triScenarios.getChildren().add(triScenario);
 		}
 	}
 	
@@ -805,21 +825,25 @@ public class MainStageController {
 		//If a robot is selected in the list:
 		if(Pattern.matches(res.triRobotText + "[0-9]+", curItem.getValue())) {
 			//If the right number (robot-id) is selected in the list:
-			if(deviceID == Integer.parseInt(curItem.getValue().substring(10))) {
+			if(deviceID == Integer.parseInt(curItem.getValue().substring(8))) {
 				
 			}
 		}
 
 	}
 	
-	public void updateControlData(int deviceID) {
+	public void updateControlData(int deviceID, String controlCmd) {
 		
 		TreeItem<String> curItem = MainStageController.this.view.trvDeviceTree.getSelectionModel().getSelectedItem();
 		
 		if(Pattern.matches(res.triAppText + "[0-9]+", curItem.getValue())) {
+			System.out.println("CurItem: " + curItem.getValue());
 			//If the right number (robot-id) is selected in the list:
 			if(deviceID == Integer.parseInt(curItem.getValue().substring(10))) {
-				
+				this.showAppInfo(deviceID);
+				String infoText = this.view.txaDeviceInfo.getText();
+				infoText += "Steering Command: " + controlCmd;
+				this.view.txaDeviceInfo.setText(infoText);
 			}
 		}
 		
