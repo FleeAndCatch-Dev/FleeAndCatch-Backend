@@ -13,6 +13,7 @@ import flee_and_catch.backend.communication.Client;
 import flee_and_catch.backend.communication.Server;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Steering;
 import flee_and_catch.backend.communication.command.szenario.Szenario;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
@@ -818,31 +819,40 @@ public class MainStageController {
 	
 	//### Methods to update sensor and control data ############################
 	
-	public void updateSensorData(int deviceID) {
+	public void updateSensorData(int deviceID, Robot robotData) {
 		
 		TreeItem<String> curItem = MainStageController.this.view.trvDeviceTree.getSelectionModel().getSelectedItem();
 		
 		//If a robot is selected in the list:
 		if(Pattern.matches(res.triRobotText + "[0-9]+", curItem.getValue())) {
 			//If the right number (robot-id) is selected in the list:
-			if(deviceID == Integer.parseInt(curItem.getValue().substring(8))) {
-				
+			if(deviceID == Integer.parseInt(curItem.getValue().substring(10))) {
+				this.showRobotInfo(deviceID);
+				String infoText = this.view.txaDeviceInfo.getText();
+				infoText += "Sensor Data:\n";
+				infoText += "Orientation: " + robotData.getPosition().getOrientation() + " Degrees\n";
+				infoText += "X-Position: " + robotData.getPosition().getX() + " mm\n";
+				infoText += "Y-Position: " + robotData.getPosition().getY() + " mm\n";
+				infoText += "Speed: " + robotData.getSpeed() + " cm\\s";
+				this.view.txaDeviceInfo.setText(infoText);
 			}
 		}
 
 	}
 	
-	public void updateControlData(int deviceID, String controlCmd) {
+	public void updateControlData(int deviceID, Steering steeringCmd) {
 		
 		TreeItem<String> curItem = MainStageController.this.view.trvDeviceTree.getSelectionModel().getSelectedItem();
 		
 		if(Pattern.matches(res.triAppText + "[0-9]+", curItem.getValue())) {
-			System.out.println("CurItem: " + curItem.getValue());
+			
 			//If the right number (robot-id) is selected in the list:
-			if(deviceID == Integer.parseInt(curItem.getValue().substring(10))) {
+			if(deviceID == Integer.parseInt(curItem.getValue().substring(8))) {
 				this.showAppInfo(deviceID);
 				String infoText = this.view.txaDeviceInfo.getText();
-				infoText += "Steering Command: " + controlCmd;
+				infoText += "Steering Commands:\n";
+				infoText += "Direction: " + steeringCmd.getDirection().toString() + "\n";
+				infoText += "Speed: " + steeringCmd.getSpeed().toString();
 				this.view.txaDeviceInfo.setText(infoText);
 			}
 		}

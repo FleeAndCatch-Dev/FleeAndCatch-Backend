@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import flee_and_catch.backend.communication.Server;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.view.ViewController;
 
@@ -32,6 +33,7 @@ public final class AppController {
 		appsLock.unlock();
 		
 		//Set number of robots in view:
+		//ViewController.setNumberOfDevices(Server.getClients().size());
 		ViewController.setNumberOfApps(AppController.getApps().size());
 	}
 	
@@ -41,6 +43,7 @@ public final class AppController {
 		appsLock.unlock();
 		
 		//Set number of robots in view:
+		//ViewController.setNumberOfDevices(Server.getClients().size());
 		ViewController.setNumberOfApps(AppController.getApps().size());
 	}
 	

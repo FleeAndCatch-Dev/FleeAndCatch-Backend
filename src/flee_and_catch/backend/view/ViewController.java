@@ -1,6 +1,8 @@
 //### ViewController.java ##################################################################################################################
 package flee_and_catch.backend.view;
 
+import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Steering;
 //### IMPORTS ##############################################################################################################################
 import flee_and_catch.backend.view.stage.MainStageController;
 import javafx.application.Platform;
@@ -134,12 +136,21 @@ public class ViewController {
 	}
 	
 	
-	public static void updateControlData(int deviceID, String controlCmd) {
+	public static void updateControlData(int deviceID, Steering steeringCmd) {
 		//If the View is not activated:
 		if(!ViewController.active) { return; }
 		
 		Platform.runLater(new Runnable() { @Override public void run() {
-			ViewController.mainStage.updateControlData(deviceID, controlCmd);
+			ViewController.mainStage.updateControlData(deviceID, steeringCmd);
+		}});
+	}
+	
+	public static void updateSensorData(int deviceID, Robot robotData) {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+				
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.updateSensorData(deviceID, robotData);;
 		}});
 	}
 	

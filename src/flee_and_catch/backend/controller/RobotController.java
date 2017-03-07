@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import flee_and_catch.backend.communication.Client;
+import flee_and_catch.backend.communication.Server;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.view.ViewController;
 
@@ -28,6 +30,7 @@ public final class RobotController {
 		robotsLock.unlock();
 		
 		//Set number of robots in view:
+		//ViewController.setNumberOfDevices(Server.getClients().size());
 		ViewController.setNumberOfRobots(RobotController.getRobots().size());
 	}
 	
@@ -37,6 +40,7 @@ public final class RobotController {
 		robotsLock.unlock();
 		
 		//Set number of robots in view:
+		//ViewController.setNumberOfDevices(Server.getClients().size());
 		ViewController.setNumberOfRobots(RobotController.getRobots().size());
 	}
 	

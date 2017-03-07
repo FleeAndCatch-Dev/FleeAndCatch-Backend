@@ -23,6 +23,7 @@ import flee_and_catch.backend.communication.command.device.Device;
 import flee_and_catch.backend.communication.command.device.DeviceAdapter;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Steering;
 import flee_and_catch.backend.communication.command.exception.Exception;
 import flee_and_catch.backend.communication.command.identification.IdentificationType;
 import flee_and_catch.backend.communication.command.szenario.Control;
@@ -234,6 +235,11 @@ public class Interpreter {
 		case CurrentRobot:
 			//New update from a robot
 			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot){
+				
+				int deviceID = command.getIdentification().getId();
+				Robot robotData = command.getRobots().get(0);
+				ViewController.updateSensorData(deviceID, robotData);
+				
 				//Get the szenario of the robot
 				Szenario szenario = SzenarioController.getSzenarioOfDevice(command.getIdentification().getId(), IdentificationType.valueOf(command.getIdentification().getType()));
 				if(szenario != null){
@@ -259,6 +265,7 @@ public class Interpreter {
 					}
 				}
 			}
+
 			return;
 		case AllSzenarios:
 			//Send the app the update date of all szenarios
@@ -412,8 +419,8 @@ public class Interpreter {
 			case Control:
 				int deviceID = pCommand.getIdentification().getId();
 				Control control = (Control) pCommand.getSzenario();
-				String controlCmd = control.getSteering().toString();
-				ViewController.updateControlData(deviceID, controlCmd);
+				Steering steeringCmd = control.getSteering();
+				ViewController.updateControlData(deviceID, steeringCmd);
 				//No implementation needed
 				break;
 			default:
