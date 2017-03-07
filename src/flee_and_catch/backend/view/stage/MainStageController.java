@@ -824,7 +824,7 @@ public class MainStageController {
 		TreeItem<String> curItem = MainStageController.this.view.trvDeviceTree.getSelectionModel().getSelectedItem();
 		
 		//If a robot is selected in the list:
-		if(Pattern.matches(res.triRobotText + "[0-9]+", curItem.getValue())) {
+		if(curItem != null && Pattern.matches(res.triRobotText + "[0-9]+", curItem.getValue())) {
 			//If the right number (robot-id) is selected in the list:
 			if(deviceID == Integer.parseInt(curItem.getValue().substring(10))) {
 				this.showRobotInfo(deviceID);
@@ -844,7 +844,7 @@ public class MainStageController {
 		
 		TreeItem<String> curItem = MainStageController.this.view.trvDeviceTree.getSelectionModel().getSelectedItem();
 		
-		if(Pattern.matches(res.triAppText + "[0-9]+", curItem.getValue())) {
+		if(curItem != null && Pattern.matches(res.triAppText + "[0-9]+", curItem.getValue())) {
 			
 			//If the right number (robot-id) is selected in the list:
 			if(deviceID == Integer.parseInt(curItem.getValue().substring(8))) {
