@@ -26,6 +26,8 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -56,12 +58,10 @@ public class MainStage extends Stage {
 	GridPane gdpPseudoPane;
 	//Menu bar at the top of the window:
 	MenuBar mnbMenuBar;
-	
 	ImageView imvProgram;
 	Menu mnuProgram;
 	Label lblPseudoMnuProgram;
 	CustomeRotateTransition rttMnuProgram;
-	
 	ImageView imvSettings;
 	Menu mnuSettings;
 	Label lblPseudoMnuSettings;
@@ -96,6 +96,7 @@ public class MainStage extends Stage {
 	
 	//### Content ##############################################################
 	
+	//### Elements for info about the backend ##################################
 	TitledBorderPane tbpBackendInfo;
 	GridPane gdpBackendInfo;
 	Label lblIPAddText;
@@ -110,10 +111,14 @@ public class MainStage extends Stage {
 	Label lblAppsValue;
 	Label lblScenariosText;
 	Label lblScenariosValue;
-	
+	//### Elements for info about the devices & debug ##########################
 	TitledBorderPane tbpDeviceInfo;
 	GridPane gdpDeviceInfo;
+	TabPane tapTextAreas;
+	Tab tabDeviceInfo;
+	Tab tabDebugConsole;
 	TextArea txaDeviceInfo;
+	TextArea txaDebugInfo;
 	ScrollPane scpDeviceTreePane;
 	TreeView<String> trvDeviceTree;
 	TreeItem<String> triDevices;
@@ -319,21 +324,47 @@ public class MainStage extends Stage {
 		colDI2.setHalignment(HPos.RIGHT);
 		this.gdpBackendInfo.getColumnConstraints().addAll(colDI1, colDI2);
 		
+		this.tapTextAreas = new TabPane();
+		this.tapTextAreas.setPrefWidth(10000);
+		this.tapTextAreas.setPrefHeight(10000);
+		
+		this.tabDeviceInfo = new Tab();
+		this.tabDeviceInfo.setText("Info");
+		this.tabDeviceInfo.setGraphic(new ImageView(res.infoIcon16x16));
+		this.tabDeviceInfo.setClosable(false);
+		//this.tabDeviceInfo.getContent().setStyle("-fx-background-color: rgba(0,0,0,0);");
+		
+		this.tabDebugConsole = new Tab();
+		this.tabDebugConsole.setText("Debug console");
+		this.tabDebugConsole.setClosable(false);
+		this.tabDebugConsole.setGraphic(new ImageView(res.bugIcon16x16));
+		
 		this.txaDeviceInfo = new TextArea();
 		this.txaDeviceInfo.setId("txaDeviceInfo");
 		this.txaDeviceInfo.setPrefWidth(10000);
 		this.txaDeviceInfo.setPrefHeight(10000);
 		this.txaDeviceInfo.setEditable(false);
+		this.txaDeviceInfo.setPadding(new Insets(5,5,5,5));
+		
+		this.txaDebugInfo = new TextArea();
+		this.txaDebugInfo.setId("txaDebugConsole");
+		this.txaDebugInfo.setPrefWidth(10000);
+		this.txaDebugInfo.setPrefHeight(10000);
+		this.txaDebugInfo.setEditable(false);
+		this.txaDebugInfo.setPadding(new Insets(5,5,5,5));
+		
 		this.scpDeviceTreePane = new ScrollPane();
 		this.scpDeviceTreePane.setHbarPolicy(ScrollBarPolicy.NEVER);
 		this.scpDeviceTreePane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
 		this.scpDeviceTreePane.setPrefHeight(10000);
 		this.scpDeviceTreePane.setMinWidth(200);
 		this.scpDeviceTreePane.setPrefWidth(200);
+		this.scpDeviceTreePane.setFitToHeight(true);
+		this.scpDeviceTreePane.setFitToWidth(true);
 		
 		this.trvDeviceTree = new TreeView<String>();
-		this.trvDeviceTree.setPrefHeight(10000);
-		this.trvDeviceTree.setPrefWidth(200);
+		//this.trvDeviceTree.setPrefHeight(10000);
+		//this.trvDeviceTree.setPrefWidth(200);
 		this.trvDeviceTree.getSelectionModel().selectedItemProperty().addListener(ceh);
 		this.triDevices = new TreeItem<String>(res.triDevicesText + " (0)");
 		this.triDevices.setGraphic(new ImageView(res.deviceIcon16x16));
@@ -377,8 +408,14 @@ public class MainStage extends Stage {
 		this.trvDeviceTree.setRoot(this.triDevices);
 		//Add tree view to scroll pane:
 		this.scpDeviceTreePane.setContent(this.trvDeviceTree);
+		this.tabDeviceInfo.setContent(this.txaDeviceInfo);
+		this.tabDebugConsole.setContent(this.txaDebugInfo);
+		this.tapTextAreas.getTabs().addAll(this.tabDeviceInfo, this.tabDebugConsole);
+		
+		
 		//Add text field and scroll pane to grid pane:
-		this.gdpDeviceInfo.add(this.txaDeviceInfo, 0, 0);
+		//this.gdpDeviceInfo.add(this.txaDeviceInfo, 0, 0);
+		this.gdpDeviceInfo.add(this.tapTextAreas, 0, 0);
 		this.gdpDeviceInfo.add(this.scpDeviceTreePane, 1, 0);
 		//Add grid pane to titled border pane:
 		this.tbpDeviceInfo.setContent(this.gdpDeviceInfo);
@@ -429,7 +466,7 @@ public class MainStage extends Stage {
 	private void initStage(MainStageResources res, EventHandler<MouseEvent> meh, EventHandler<WindowEvent> weh) {
 		
 		//Create scene and set their properties:
-		this.scene = new Scene(this.skpRootPane, 700, 500);
+		this.scene = new Scene(this.skpRootPane, 700, 550);
 		this.scene.getStylesheets().add(MainStage.class.getResource("MainStageCSS.css").toExternalForm());
 		this.addEventHandler(MouseEvent.ANY, meh);
 		//Set stage properties:

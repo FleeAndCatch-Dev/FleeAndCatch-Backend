@@ -106,6 +106,8 @@ public class MainStageResources {
 	Image packagesControlIcon16x16;
 	Image packagesScenarioIcon16x16;
 	Image packagesErrorIcon16x16;
+	Image infoIcon16x16;
+	Image bugIcon16x16;
 	Image facLogo120x120;
 	
 	//### Files ################################################################################
@@ -220,6 +222,8 @@ public class MainStageResources {
 		this.packagesScenarioOffIcon16x16   = new Image("icons/packageScenarioDisabled16x16.png");
 		this.packagesErrorIcon16x16      = new Image("icons/packageError16x16.png");
 		this.packagesErrorOffIcon16x16      = new Image("icons/packageErrorDisabled16x16.png");
+		this.infoIcon16x16               = new Image("icons/info16x16.png");
+		this.bugIcon16x16                = new Image("icons/bug16x16.png");
 		this.facLogo120x120              = new Image("images/logo120x120.png");
 		
 		

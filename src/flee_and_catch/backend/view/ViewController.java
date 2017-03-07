@@ -1,6 +1,8 @@
 //### ViewController.java ##################################################################################################################
 package flee_and_catch.backend.view;
 
+import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Steering;
 //### IMPORTS ##############################################################################################################################
 import flee_and_catch.backend.view.stage.MainStageController;
 import javafx.application.Platform;
@@ -115,12 +117,40 @@ public class ViewController {
 		}});
 	}
 	
+	public static void setNumberOfScenarios(final int scenarios) {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+				
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.setNumberOfScenarios(scenarios);;
+		}});
+	}
+	
 	public static void setStatus(final Status state) {
 		//If the View is not activated:
 		if(!ViewController.active) { return; }
 		
 		Platform.runLater(new Runnable() { @Override public void run() {
 			ViewController.mainStage.setStatus(state);;
+		}});
+	}
+	
+	
+	public static void updateControlData(int deviceID, Steering steeringCmd) {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+		
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.updateControlData(deviceID, steeringCmd);
+		}});
+	}
+	
+	public static void updateSensorData(int deviceID, Robot robotData) {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+				
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.updateSensorData(deviceID, robotData);;
 		}});
 	}
 	
@@ -172,6 +202,15 @@ public class ViewController {
 			ViewController.mainStage.increaseNoOfDisconnectPackages();
 		}});
 		
+	}
+	
+	public static void printDebugLine(String string) {
+		//If the View is not activated:
+		if(!ViewController.active) { return; }
+				
+		Platform.runLater(new Runnable() { @Override public void run() {
+			ViewController.mainStage.printDebugLine(string);;
+		}});
 	}
 	
 //##########################################################################################################################################

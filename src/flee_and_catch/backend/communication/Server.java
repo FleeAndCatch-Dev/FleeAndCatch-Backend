@@ -24,10 +24,10 @@ import com.google.gson.Gson;
 import flee_and_catch.backend.communication.command.CommandType;
 import flee_and_catch.backend.communication.command.ExceptionCommand;
 import flee_and_catch.backend.communication.command.ExceptionCommandType;
-import flee_and_catch.backend.communication.command.component.IdentificationType;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.identification.ClientIdentification;
+import flee_and_catch.backend.communication.command.identification.IdentificationType;
 import flee_and_catch.backend.communication.command.szenario.Szenario;
 import flee_and_catch.backend.controller.AppController;
 import flee_and_catch.backend.controller.RobotController;
@@ -72,10 +72,14 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public static void open() throws IOException{
+	public static void open() {
 		if(!opened){
 			port = Default.port;
-			serverSocket = new ServerSocket(port);
+			try {
+				serverSocket = new ServerSocket(port);
+			} catch (IOException e) {
+				System.out.println("101 " + e.getMessage());
+			}
 			//Set backend infos:
 			
 			ViewController.setBackendIPAddress(Server.getHostAddresses()[0]);
@@ -88,8 +92,7 @@ public final class Server {
 					try {
 						listen();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						System.out.println("102 " + e.getMessage());
 					}
 				}
 			});
@@ -108,10 +111,15 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public static void open(int pPort) throws IOException{
+	public static void open(int pPort) {
 		if(!opened){
 			port = pPort;
-			serverSocket = new ServerSocket(port);
+			try {
+				serverSocket = new ServerSocket(port);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				System.out.println("101 " + e.getMessage());
+			}
 			Thread listenerThread = new Thread(new Runnable() {
 				
 				@Override
@@ -119,8 +127,7 @@ public final class Server {
 					try {
 						listen();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						System.out.println("102 " + e.getMessage());
 					}
 				}
 			});
@@ -143,34 +150,39 @@ public final class Server {
 		while(opened){
 			ViewController.setStatus(Status.Waiting);;
 			
-			final Socket socket = serverSocket.accept();
-			socket.setTcpNoDelay(true);
-			socket.setKeepAlive(true);
-			
-			final int id = generateNewClientId();
-			Thread clientThread = new Thread(new Runnable() {
+			Socket socket = serverSocket.accept();
+			if(socket != null){
+				try {
+					socket.setTcpNoDelay(true);
+					socket.setKeepAlive(true);
+				} catch (SocketException e) {
+					// TODO Auto-generated catch block
+					System.out.println("104 " + e.getMessage());
+				}
 				
-				@Override
-				public void run() {
-					try {
-						newClient(socket, id);
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						if(e instanceof SocketException){
+				
+				final int id = generateNewClientId();
+				Thread clientThread = new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						try {
+							newClient(socket, id);
+						} catch (SocketException e) {
 							try {
 								handleDisconnection(id, e.getMessage());
 							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
+								System.out.println("105 " + e1.getMessage());
 							}
-						}
-						else{
-							e.printStackTrace();
+						} catch (IOException e) {
+							System.out.println("106 " + e.getMessage());
 						}
 					}
-				}
-			});
-			clientThread.start();
+				});
+				clientThread.start();
+			}
+			else
+				System.out.println("103 " + "The socket is null");
 		}
 	}
 
@@ -184,27 +196,33 @@ public final class Server {
 	 * @throws Exception
 	 * 
 	 * @author ThunderSL94
+	 * @throws IOException 
 	 */
-	private static void newClient(Socket pSocket, int pId) throws Exception {
+	private static void newClient(Socket pSocket, int pId) throws IOException {
+		
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(pSocket.getInputStream()));
 		DataOutputStream outputStream = new DataOutputStream(pSocket.getOutputStream());
 		
-		//Set status message:
-		ViewController.setStatus(Status.Connected);;
-		int index = pSocket.getRemoteSocketAddress().toString().indexOf(":");
-		
-		Client client = new Client(true, new ClientIdentification(pId, pSocket.getRemoteSocketAddress().toString().substring(1, index), pSocket.getPort(), IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
-		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
-		clientList.add(client);
-		
-		//Set number of devices in view:
-		ViewController.setNumberOfDevices(clientList.size());
-		
-		setClients(clientList);
-		
-		while(client.isConnected()){
-			client.getInterpreter().parse(receiveCmd(client));
+		if(outputStream != null && bufferedReader != null){
+			//Set status message:
+			ViewController.setStatus(Status.Connected);;
+			int index = pSocket.getRemoteSocketAddress().toString().indexOf(":");
+			
+			Client client = new Client(true, new ClientIdentification(pId, pSocket.getRemoteSocketAddress().toString().substring(1, index), pSocket.getPort(), IdentificationType.Undefined.toString()), pSocket, bufferedReader, outputStream);
+			ArrayList<Client> clientList = new ArrayList<Client>(getClients());
+			clientList.add(client);
+			
+			//Set number of devices in view:
+			ViewController.setNumberOfDevices(clientList.size());
+			
+			setClients(clientList);
+			
+			while(client.isConnected()){
+				client.getInterpreter().parse(receiveCmd(client));
+			}
+			return;
 		}
+		System.out.println("107 " + "The generated streams are null");
 	}
 	
 	/**
@@ -219,7 +237,7 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public static void sendCmd(OutputStream pOutputStream, String pCommand) throws IOException, JSONException {
+	public static void sendCmd(OutputStream pOutputStream, String pCommand) {
 		checkCmd(pCommand);
 		
 		byte[] size = new byte[4];
@@ -229,11 +247,15 @@ public final class Server {
 			rest = (int) (rest % Math.pow(128, size.length - (i + 1)));
 		}
 		
-		pOutputStream.write(size);
-		pOutputStream.flush();
-		
-		pOutputStream.write(pCommand.getBytes());
-		pOutputStream.flush();
+		try {
+			pOutputStream.write(size);
+			pOutputStream.flush();
+			
+			pOutputStream.write(pCommand.getBytes());
+			pOutputStream.flush();
+		} catch (IOException e) {
+			System.out.println("108 " + e.getMessage());
+		}
 	}
 	
 	/**
@@ -248,7 +270,7 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public static void sendCmd(Client pClient, String pCommand) throws IOException, JSONException {
+	public static void sendCmd(Client pClient, String pCommand) {
 		checkCmd(pCommand);
 		
 		byte[] size = new byte[4];
@@ -258,11 +280,15 @@ public final class Server {
 			rest = (int) (rest % Math.pow(128, size.length - (i + 1)));
 		}
 		
-		pClient.getOutputStream().write(size);
-		pClient.getOutputStream().flush();
-		
-		pClient.getOutputStream().write(pCommand.getBytes());
-		pClient.getOutputStream().flush();
+		try {
+			pClient.getOutputStream().write(size);
+			pClient.getOutputStream().flush();
+			
+			pClient.getOutputStream().write(pCommand.getBytes());
+			pClient.getOutputStream().flush();
+		} catch (IOException e) {
+			System.out.println("108 " + e.getMessage());
+		}
 	}
 	
 	/**
@@ -275,29 +301,41 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private static String receiveCmd(Client pClient) throws IOException{
+	private static String receiveCmd(Client pClient) {
 		char[] value = new char[4];
-		int result = pClient.getBufferedReader().read(value);
-		
-		if(result >= 0) {
-			int length = 0;
-			for(int i = 0; i < value.length; i++) {
-				length += (int) (value[i] * Math.pow(128, i));
-			}
+		int result;
+		try {
+			result = pClient.getBufferedReader().read(value);
 			
-			value = new char[length];
-			for( int i=0; i<value.length; i++) {
-				char[] tmp = new char[1];
-				pClient.getBufferedReader().read(tmp, 0, 1);
-				value[i] = tmp[0];
+			if(result >= 0) {
+				int length = 0;
+				for(int i = 0; i < value.length; i++) {
+					length += (int) (value[i] * Math.pow(128, i));
+				}
+				
+				value = new char[length];
+				for( int i=0; i<value.length; i++) {
+					char[] tmp = new char[1];
+					pClient.getBufferedReader().read(tmp, 0, 1);
+					value[i] = tmp[0];
+				}
+				
+				return new String(value);
 			}
-			
-			return new String(value);
+			else {
+				removeClient(pClient);
+				return null;
+			}
+		} catch (IOException e) {
+			//Device is disconnecting
+			try {
+				handleDisconnection(pClient.getIdentification().getId(), e.getMessage());
+			} catch (Exception e1) {
+				System.out.println("new " + e1.getMessage());
+			}
+			//System.out.println("109 " + e.getMessage());
 		}
-		else {
-			removeClient(pClient);
-			return null;
-		}
+		return null;
 	}
 	
 	/**
@@ -309,11 +347,15 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public static void removeClient(Client pClient) throws IOException{
-		pClient.getBufferedReader().close();
-		pClient.getOutputStream().close();
-		pClient.setConnected(false);		
-		pClient.getSocket().close();
+	public static void removeClient(Client pClient) {
+		try {
+			pClient.getBufferedReader().close();
+			pClient.getOutputStream().close();
+			pClient.setConnected(false);		
+			pClient.getSocket().close();
+		} catch (IOException e) {
+			System.out.println("110 " + e.getMessage());
+		}		
 		
 		ArrayList<Client> clientList = new ArrayList<Client>(getClients());
 		clientList.remove(pClient);
@@ -372,8 +414,14 @@ public final class Server {
 	 * 
 	 * @author ThunderSL94
 	 */
-	private static JSONObject checkCmd(String pCommand) throws JSONException {
-		return new JSONObject(pCommand);
+	private static JSONObject checkCmd(String pCommand) {
+		JSONObject data = null;
+		try {
+			data = new JSONObject(pCommand);
+		} catch (JSONException e) {
+			System.out.println("111 " + e.getMessage());
+		}
+		return data;
 	}
 
 	public static Client getClientOfId(int pId){
@@ -388,38 +436,7 @@ public final class Server {
 		return client;
 	}	
 	
-	public static Szenario getSzenarioOfClient(Client pClient){
-		//Is the current device in a szenario
-		Szenario szenario = null;
-		IdentificationType type = IdentificationType.valueOf(pClient.getIdentification().getType());
-		for(int i=0; i<SzenarioController.getSzenarios().size(); i++){
-			switch (type) {
-				case App:
-					App app = (App)pClient.getDevice();
-					for(int j=0; j<SzenarioController.getSzenarios().get(i).getApps().size(); j++){
-						if(app.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getApps().get(j).getIdentification().getId()){
-							szenario = SzenarioController.getSzenarios().get(i);
-							break;
-						}
-					}
-					break;
-				case Robot:
-					Robot robot = (Robot)pClient.getDevice();
-					for(int j=0; j<SzenarioController.getSzenarios().get(i).getRobots().size(); j++){
-						if(robot.getIdentification().getId() == SzenarioController.getSzenarios().get(i).getRobots().get(j).getIdentification().getId()){
-							szenario = SzenarioController.getSzenarios().get(i);
-							break;
-						}
-					}
-					break;
-				default:
-					break;
-			}
-		}
-		return szenario;
-	}
-	
-	public static ArrayList<Client> getSzenarioMember(Szenario pSzenario){
+	public static ArrayList<Client> getClientSzenarioMember(Szenario pSzenario){
 		ArrayList<Client> szenarioMember = new ArrayList<Client>();
 		
 		for(int i=0; i<pSzenario.getApps().size(); i++){
@@ -442,25 +459,22 @@ public final class Server {
 		return szenarioMember;
 	}
 	
-	public static void handleDisconnection(int pId, String pMessage) throws Exception{
+	public static void handleDisconnection(int pId, String pMessage) {
 		
 		Client client = getClientOfId(pId);
 		if(client != null){
-			Gson gson = new Gson();
 			ExceptionCommand cmd = new ExceptionCommand(CommandType.Exception.toString(), ExceptionCommandType.UnhandeldDisconnection.toString(), client.getIdentification(), new flee_and_catch.backend.communication.command.exception.Exception(ExceptionCommandType.UnhandeldDisconnection.toString(), pMessage, client.getDevice()));
-			Szenario szenario = getSzenarioOfClient(client);
+			Szenario szenario = SzenarioController.getSzenarioOfDevice(client.getIdentification().getId(), IdentificationType.valueOf(client.getIdentification().getType()));
 			if(szenario != null){
-				ArrayList<Client> szenarioMember = getSzenarioMember(szenario);
+				ArrayList<Client> szenarioMember = getClientSzenarioMember(szenario);
 				
 				for(int i=0; i<szenarioMember.size(); i++){
+					Gson gson = new Gson();
 					Server.sendCmd(szenarioMember.get(i), gson.toJson(cmd));
 				}
-				
-				
+								
 				//Remove from szenariolist
-				ArrayList<Szenario> szenarioList = new ArrayList<Szenario>(SzenarioController.getSzenarios());
-				szenarioList.remove(szenario);
-				SzenarioController.setSzenarios(szenarioList);
+				SzenarioController.remove(szenario);
 			}
 			IdentificationType type = IdentificationType.valueOf(client.getIdentification().getType());
 			//Remove device from controller
@@ -481,7 +495,7 @@ public final class Server {
 			
 			return;
 		}
-		throw new Exception("The disconnected device don't exist");
+		System.out.println("112 " + "The disconnected device doesn't exist");
 	}
 	
 	public static boolean isOpened() {
