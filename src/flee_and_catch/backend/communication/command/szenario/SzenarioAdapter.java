@@ -13,6 +13,7 @@ public class SzenarioAdapter implements JsonDeserializer<Szenario> {
 		String myType = json.getAsJsonObject().get("type").getAsString();
         switch (myType) {
             case "Control": return context.deserialize(json, Control.class);
+            case "Synchron": return context.deserialize(json, Synchron.class);
             default: return null;
         }
 	}

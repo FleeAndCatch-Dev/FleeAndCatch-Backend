@@ -154,7 +154,10 @@ public final class Server {
 			if(socket != null){
 				try {
 					socket.setTcpNoDelay(true);
-					socket.setKeepAlive(true);
+					//socket.setKeepAlive(true);
+					socket.setSendBufferSize(1000);
+					socket.setReceiveBufferSize(1000);
+					//System.out.println(socket.getSendBufferSize());
 				} catch (SocketException e) {
 					// TODO Auto-generated catch block
 					System.out.println("104 " + e.getMessage());
