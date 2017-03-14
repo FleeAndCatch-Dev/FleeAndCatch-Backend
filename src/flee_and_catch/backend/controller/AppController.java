@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import flee_and_catch.backend.communication.Server;
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.view.ViewController;
 
@@ -20,8 +19,6 @@ public final class AppController {
 			if(AppController.getApps().get(i).getIdentification().getId() == pApp.getIdentification().getId()){
 				//Check if robots equal
 				AppController.getApps().get(i).setActive(pState);
-				if(!pState)
-					AppController.getApps().get(i).setRobotId(-1);
 			}
 		}
 		appsLock.unlock();
