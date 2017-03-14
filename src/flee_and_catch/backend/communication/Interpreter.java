@@ -438,8 +438,89 @@ public class Interpreter {
 		}	
 		System.out.println("125 " + "The client to send the command doesn't exist");
 	}
-	
 	private void szenarioSynchron(SzenarioCommand pCommand) {
+		
+		ControlType type = ControlType.valueOf(pCommand.getSzenario().getCommand());
+		
+		//ViewController.increaseNoOfControlPackages();
+		
+		//Get the client of the robot
+		ArrayList<Client> clients = new ArrayList<Client>();
+		
+		//Run through all involved robots of the scenario:
+		for(Robot robot : pCommand.getSzenario().getRobots()) {
+			//Run through all existing clients:
+			for(Client client : Server.getClients()){
+				//Check if client is involved:
+				if(robot.getIdentification().getId() == client.getIdentification().getId()){
+					clients.add(client);	//Add client to the necessary clients!
+				}
+			}
+		}
+
+		if(!clients.isEmpty()){
+			
+			switch (type) {
+			
+				case Begin:
+					
+					//Set devices active -> true
+					for(int i=0;i<pCommand.getSzenario().getRobots().size();i++){
+						RobotController.changeActive(pCommand.getSzenario().getRobots().get(i), true);
+					}
+					for(int i=0;i<pCommand.getSzenario().getApps().size();i++){
+						AppController.changeActive(pCommand.getSzenario().getApps().get(i), true);
+					}		
+					
+					//Set the szenario to the clients
+					for(int i=0;i<Server.getClients().size();i++){
+						for(int j=0;j<pCommand.getSzenario().getApps().size();j++){
+							if(Server.getClients().get(i).getDevice() instanceof App){
+								if(((App)Server.getClients().get(i).getDevice()).getIdentification().getId() == pCommand.getSzenario().getApps().get(j).getIdentification().getId())
+								Server.getClients().get(i).setSzenario(pCommand.getSzenario());
+							}
+						}
+					}
+					for(int i=0;i<Server.getClients().size();i++){
+						for(int j=0;j<pCommand.getSzenario().getRobots().size();j++){
+							if(Server.getClients().get(i).getDevice() instanceof Robot){
+								if(((Robot)Server.getClients().get(i).getDevice()).getIdentification().getId() == pCommand.getSzenario().getRobots().get(j).getIdentification().getId())
+									Server.getClients().get(i).setSzenario(pCommand.getSzenario());
+							}
+						}
+					}				
+					break;
+				case Start:
+					//No implementation needed
+					break;
+				case Stop:
+					//No implementation needed
+					break;
+				case Control:
+					//int deviceID = pCommand.getIdentification().getId();
+					//Control control = (Control) pCommand.getSzenario();
+					//Steering steeringCmd = control.getSteering();
+					//ViewController.updateControlData(deviceID, steeringCmd);
+					//No implementation needed
+					break;
+				default:
+					System.out.println("126 " + "Wrong control type of json command");
+					return;
+			}
+			
+			//Build command:
+			Synchron control = (Synchron) pCommand.getSzenario();
+			ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
+			
+			//Send command to all involved clients:
+			for(Client client : clients) {
+				Server.sendCmd(client, gson.toJson(cmd));
+			}
+			return;
+		}	
+		System.out.println("125 " + "The client to send the command doesn't exist");
+	}
+	private void szenarioFollow(SzenarioCommand pCommand) {
 		
 		ControlType type = ControlType.valueOf(pCommand.getSzenario().getCommand());
 		

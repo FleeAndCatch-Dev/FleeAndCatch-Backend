@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import flee_and_catch.backend.communication.command.device.app.App;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
+import flee_and_catch.backend.communication.command.device.robot.Steering;
 
 public abstract class Szenario {
 	protected int id;
@@ -12,14 +13,16 @@ public abstract class Szenario {
 	protected String mode;
 	protected ArrayList<App> apps;
 	protected ArrayList<Robot> robots;
+	private Steering steering;
 	
-	public Szenario(int pId, String pType, String pCommand, String pMode, ArrayList<App> pApps, ArrayList<Robot> pRobots) {
+	public Szenario(int pId, String pType, String pCommand, String pMode, ArrayList<App> pApps, ArrayList<Robot> pRobots, Steering pSteering) {
 		this.id = pId;
 		this.type = pType;
 		this.command = pCommand;
 		this.mode = pMode;
 		this.apps = pApps;
 		this.robots = pRobots;
+		this.steering = pSteering;
 	}	
 
 	public int getId() {
@@ -54,5 +57,7 @@ public abstract class Szenario {
 	public void setRobots(ArrayList<Robot> robots) {
 		this.robots = robots;
 	}
-	
+	public Steering getSteering() {
+		return steering;
+	}
 }
