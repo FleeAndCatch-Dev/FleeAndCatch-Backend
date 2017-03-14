@@ -45,6 +45,9 @@ public class Robot extends Device {
 	public Position getPosition() {
 		return position;
 	}
+	public void setPosition(Position position) {
+		this.position = position;
+	}
 
 	public double getSpeed() {
 		return speed;

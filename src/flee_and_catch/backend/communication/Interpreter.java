@@ -15,6 +15,7 @@ import flee_and_catch.backend.communication.command.ConnectionCommandType;
 import flee_and_catch.backend.communication.command.ControlCommand;
 import flee_and_catch.backend.communication.command.ExceptionCommand;
 import flee_and_catch.backend.communication.command.ExceptionCommandType;
+import flee_and_catch.backend.communication.command.PositionCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommandType;
 import flee_and_catch.backend.communication.command.SzenarioCommand;
@@ -22,12 +23,15 @@ import flee_and_catch.backend.communication.command.SzenarioCommandType;
 import flee_and_catch.backend.communication.command.device.Device;
 import flee_and_catch.backend.communication.command.device.DeviceAdapter;
 import flee_and_catch.backend.communication.command.device.app.App;
+import flee_and_catch.backend.communication.command.device.robot.Position;
 import flee_and_catch.backend.communication.command.device.robot.Robot;
 import flee_and_catch.backend.communication.command.device.robot.Steering;
 import flee_and_catch.backend.communication.command.exception.Exception;
 import flee_and_catch.backend.communication.command.identification.IdentificationType;
 import flee_and_catch.backend.communication.command.szenario.Control;
 import flee_and_catch.backend.communication.command.szenario.ControlType;
+import flee_and_catch.backend.communication.command.szenario.Follow;
+import flee_and_catch.backend.communication.command.szenario.FollowType;
 import flee_and_catch.backend.communication.command.szenario.Synchron;
 import flee_and_catch.backend.communication.command.szenario.Szenario;
 import flee_and_catch.backend.communication.command.szenario.SzenarioAdapter;
@@ -356,7 +360,7 @@ public class Interpreter {
 				szenarioSynchron(command);
 				return;
 			case Follow:
-				// TODO
+				szenarioFollow(command);
 				return;
 			default:
 				System.out.println("123 " + "Wrong szenario type of json command");
@@ -432,7 +436,7 @@ public class Interpreter {
 				return;
 			}
 			Control control = (Control) pCommand.getSzenario();
-			ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
+			ControlCommand cmd = new ControlCommand(CommandType.Control.toString(), control.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
 			Server.sendCmd(localclient, gson.toJson(cmd));
 			return;
 		}	
@@ -497,10 +501,6 @@ public class Interpreter {
 					//No implementation needed
 					break;
 				case Control:
-					//int deviceID = pCommand.getIdentification().getId();
-					//Control control = (Control) pCommand.getSzenario();
-					//Steering steeringCmd = control.getSteering();
-					//ViewController.updateControlData(deviceID, steeringCmd);
 					//No implementation needed
 					break;
 				default:
@@ -508,21 +508,22 @@ public class Interpreter {
 					return;
 			}
 			
-			//Build command:
-			Synchron control = (Synchron) pCommand.getSzenario();
-			ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
-			
 			//Send command to all involved clients:
-			for(Client client : clients) {
-				Server.sendCmd(client, gson.toJson(cmd));
+			for(int i=0;i<clients.size();i++) {
+				//Build command:
+				Synchron synchron = (Synchron) pCommand.getSzenario();
+				ControlCommand cmd = new ControlCommand(CommandType.Control.toString(), synchron.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(i), synchron.getSteering());
+				
+				Server.sendCmd(clients.get(i), gson.toJson(cmd));
 			}
 			return;
 		}	
 		System.out.println("125 " + "The client to send the command doesn't exist");
 	}
+	
 	private void szenarioFollow(SzenarioCommand pCommand) {
 		
-		ControlType type = ControlType.valueOf(pCommand.getSzenario().getCommand());
+		FollowType type = FollowType.valueOf(pCommand.getSzenario().getCommand());
 		
 		//ViewController.increaseNoOfControlPackages();
 		
@@ -570,7 +571,13 @@ public class Interpreter {
 									Server.getClients().get(i).setSzenario(pCommand.getSzenario());
 							}
 						}
-					}				
+					}	
+					
+					//Set start position of the robots
+					for(int i=0;i<pCommand.getSzenario().getRobots().size();i++){
+						pCommand.getSzenario().getRobots().get(i).setPosition(new Position((i * 250) * (-1), 0, 0));
+					}
+					
 					break;
 				case Start:
 					//No implementation needed
@@ -579,24 +586,25 @@ public class Interpreter {
 					//No implementation needed
 					break;
 				case Control:
-					//int deviceID = pCommand.getIdentification().getId();
-					//Control control = (Control) pCommand.getSzenario();
-					//Steering steeringCmd = control.getSteering();
-					//ViewController.updateControlData(deviceID, steeringCmd);
 					//No implementation needed
 					break;
 				default:
-					System.out.println("126 " + "Wrong control type of json command");
+					System.out.println("new " + "Wrong follow type of json command");
 					return;
 			}
 			
 			//Build command:
-			Synchron control = (Synchron) pCommand.getSzenario();
-			ControlCommand cmd = new ControlCommand(SzenarioCommandType.Control.toString(), control.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), control.getSteering());
+			Follow follow = (Follow) pCommand.getSzenario();
+			ControlCommand cmd = new ControlCommand(CommandType.Control.toString(), follow.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(0), follow.getSteering());
+			
+			Server.sendCmd(clients.get(0), gson.toJson(cmd));
 			
 			//Send command to all involved clients:
-			for(Client client : clients) {
-				Server.sendCmd(client, gson.toJson(cmd));
+			for(int i=1;i<clients.size();i++) {
+				//Build command:
+				PositionCommand command = new PositionCommand(CommandType.Position.toString(), follow.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(i), follow.getRobots().get(i - 1).getPosition());
+				
+				Server.sendCmd(clients.get(i), gson.toJson(command));
 			}
 			return;
 		}	
