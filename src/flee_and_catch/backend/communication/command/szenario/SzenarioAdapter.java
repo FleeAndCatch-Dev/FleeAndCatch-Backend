@@ -14,6 +14,9 @@ public class SzenarioAdapter implements JsonDeserializer<Szenario> {
         switch (myType) {
             case "Control": return context.deserialize(json, Control.class);
             case "Synchron": return context.deserialize(json, Synchron.class);
+            case "Follow": return context.deserialize(json, Follow.class);
+            case "Flee": return context.deserialize(json, Flee.class);
+            case "Catch": return context.deserialize(json, Catch.class);
             default: return null;
         }
 	}
