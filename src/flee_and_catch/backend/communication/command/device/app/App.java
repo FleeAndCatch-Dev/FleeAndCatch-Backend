@@ -5,7 +5,6 @@ import flee_and_catch.backend.communication.command.identification.AppIdentifica
 
 public class App extends Device {
 	private AppIdentification identification;
-	private int robotid;
 	
 	/**
 	 * <h1>Constructor<h1/>
@@ -15,32 +14,22 @@ public class App extends Device {
 	 * 
 	 * @author ThunderSL94
 	 */
-	public App(AppIdentification pIdentification, int pRobotId){
+	public App(AppIdentification pIdentification){
 		super(false);
 		this.identification = pIdentification;
-		this.robotid = pRobotId;
 	}
 	
-	public App(AppIdentification pIdentification, boolean pActive, int pRobotId){
+	public App(AppIdentification pIdentification, boolean pActive){
 		super(pActive);
 		this.identification = pIdentification;
-		this.robotid = pRobotId;
 	}
 	
 	public App(App pApp){
 		super(pApp.isActive());
 		this.identification = pApp.getIdentification();
-		this.robotid = pApp.getRobotId();
 	}
 
 	public AppIdentification getIdentification() {
 		return identification;
-	}
-	
-	public int getRobotId(){
-		return robotid;
-	}
-	public void setRobotId(int robotid){
-		this.robotid = robotid;
 	}
 }
