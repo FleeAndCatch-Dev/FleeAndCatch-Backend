@@ -25,6 +25,7 @@ public final class RobotController {
 	public static void addNew(Robot pRobot){		
 		robotsLock.lock();
 		robots.add(pRobot);
+		sort();
 		robotsLock.unlock();
 		
 		//Set number of robots in view:
@@ -40,6 +41,31 @@ public final class RobotController {
 		//Set number of robots in view:
 		//ViewController.setNumberOfDevices(Server.getClients().size());
 		ViewController.setNumberOfRobots(RobotController.getRobots().size());
+	}
+	
+	public static void update(Robot pRobot){
+		robotsLock.lock();
+		for(int i=0;i<robots.size();i++){
+			if(pRobot.getIdentification().getId() == robots.get(i).getIdentification().getId()){
+				robots.set(i, pRobot);
+				break;
+			}
+		}
+		robotsLock.unlock();
+	}
+	
+	private static void sort(){
+		Robot value;
+        for (int i = 0; i < robots.size() - 1; i++) { 
+            if (robots.get(i).getIdentification().getId() < robots.get(i + 1).getIdentification().getId()) { 
+                continue; 
+            } 
+            value = robots.get(i); 
+            robots.set(i, robots.get(i + 1));
+            robots.set(i + 1, value);
+            sort(); 
+        }
+        return;
 	}
 	
 	public static ArrayList<Robot> getRobots() {

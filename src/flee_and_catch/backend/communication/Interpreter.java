@@ -16,6 +16,7 @@ import flee_and_catch.backend.communication.command.ControlCommand;
 import flee_and_catch.backend.communication.command.ExceptionCommand;
 import flee_and_catch.backend.communication.command.ExceptionCommandType;
 import flee_and_catch.backend.communication.command.PositionCommand;
+import flee_and_catch.backend.communication.command.PositionCommandType;
 import flee_and_catch.backend.communication.command.SynchronizationCommand;
 import flee_and_catch.backend.communication.command.SynchronizationCommandType;
 import flee_and_catch.backend.communication.command.SzenarioCommand;
@@ -171,7 +172,7 @@ public class Interpreter {
 			case Init:
 				//Initialization of device
 				long time = System.currentTimeMillis() - initClock;
-				if(time <= 120){
+				if(time <= 500){
 					//Set id and update object instances
 					switch (IdentificationType.valueOf(command.getIdentification().getType())) {
 					case App:		
@@ -248,7 +249,13 @@ public class Interpreter {
 				Robot robotData = command.getRobots().get(0);
 				ViewController.updateSensorData(deviceID, robotData);
 				
-				//Get the szenario of the robot
+				//Update the client of the robot
+				client.setDevice(command.getRobots().get(0));
+				
+				//Update the robotController
+				RobotController.update(command.getRobots().get(0));
+				
+				//Update the szenario of the robot
 				Szenario szenario = SzenarioController.getSzenarioOfDevice(command.getIdentification().getId(), IdentificationType.valueOf(command.getIdentification().getType()));
 				if(szenario != null){
 					//Update the szenario
@@ -599,10 +606,13 @@ public class Interpreter {
 			
 			Server.sendCmd(clients.get(0), gson.toJson(cmd));
 			
+			Szenario tempSzenario = SzenarioController.getSzenarioById(follow.getId());
 			//Send command to all involved clients:
 			for(int i=1;i<clients.size();i++) {
-				//Build command:
-				PositionCommand command = new PositionCommand(CommandType.Position.toString(), follow.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(i), follow.getRobots().get(i - 1).getPosition());
+				if(follow.getCommand().equals(FollowType.Control.toString()))
+						follow.setCommand(PositionCommandType.Position.toString());
+				//Build command:				
+				PositionCommand command = new PositionCommand(CommandType.Position.toString(), follow.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(i), tempSzenario.getRobots().get(i - 1).getPosition());
 				
 				Server.sendCmd(clients.get(i), gson.toJson(command));
 			}

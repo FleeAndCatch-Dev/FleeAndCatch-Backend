@@ -215,6 +215,9 @@ public final class Server {
 			ArrayList<Client> clientList = new ArrayList<Client>(getClients());
 			clientList.add(client);
 			
+			//Sort client list
+			sortClients();
+			
 			//Set number of devices in view:
 			ViewController.setNumberOfDevices(clientList.size());
 			
@@ -378,29 +381,13 @@ public final class Server {
 	 * @author ThunderSL94
 	 */
 	public static int generateNewClientId() {
-		clientsLock.lock();
+		sortClients();
 		int result = 0;
-		ArrayList<Client> tmpclients = clients;
-		ArrayList<Client> sortclients = new ArrayList<Client>();
-		
-		for(int j=0; j<tmpclients.size(); j++){
-			for(int i=0; i<tmpclients.size() - 1; i++){
-				if(tmpclients.get(i).getIdentification().getId() < tmpclients.get(i + 1).getIdentification().getId()){
-					continue;
-				}
-				sortclients.add(tmpclients.get(i));
-				tmpclients.remove(i);				
-			}
-		}
-		
-		if(sortclients.size() > 1)
-			clients = sortclients;
 		
 		for( int i=0; i<getClients().size(); i++) {
 			if(clients.get(i).getIdentification().getId() == result)
 				result++;
 		}
-		clientsLock.unlock();
 		
 		return result;
 	}
@@ -519,4 +506,23 @@ public final class Server {
 		clientsLock.unlock();
 	}
 	
+	private static void sortClients(){
+		clientsLock.lock();
+		ArrayList<Client> tmpclients = clients;
+		ArrayList<Client> sortclients = new ArrayList<Client>();
+		
+		for(int j=0; j<tmpclients.size(); j++){
+			for(int i=0; i<tmpclients.size() - 1; i++){
+				if(tmpclients.get(i).getIdentification().getId() < tmpclients.get(i + 1).getIdentification().getId()){
+					continue;
+				}
+				sortclients.add(tmpclients.get(i));
+				tmpclients.remove(i);				
+			}
+		}
+		
+		if(sortclients.size() > 1)
+			clients = sortclients;
+		clientsLock.unlock();
+	}
 }

@@ -14,7 +14,6 @@ public final class AppController {
 
 	public static void changeActive(App pApp, boolean pState){
 		appsLock.lock();
-		pApp.setActive(pState);
 		for(int i=0; i<AppController.getApps().size(); i++){
 			if(AppController.getApps().get(i).getIdentification().getId() == pApp.getIdentification().getId()){
 				//Check if robots equal
@@ -27,6 +26,7 @@ public final class AppController {
 	public static void addNew(App pApp){		
 		appsLock.lock();
 		apps.add(pApp);
+		sort();
 		appsLock.unlock();
 		
 		//Set number of robots in view:
@@ -42,6 +42,20 @@ public final class AppController {
 		//Set number of robots in view:
 		//ViewController.setNumberOfDevices(Server.getClients().size());
 		ViewController.setNumberOfApps(AppController.getApps().size());
+	}
+	
+	private static void sort(){
+		App value;
+        for (int i = 0; i < apps.size() - 1; i++) { 
+            if (apps.get(i).getIdentification().getId() < apps.get(i + 1).getIdentification().getId()) { 
+                continue; 
+            } 
+            value = apps.get(i); 
+            apps.set(i, apps.get(i + 1));
+            apps.set(i + 1, value);
+            sort(); 
+        }
+        return;
 	}
 	
 	public static List<App> getApps() {

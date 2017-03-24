@@ -6,5 +6,5 @@ public enum PositionCommandType {
 	End, 	//Reset active flag!
 	Start, 
 	Stop, 
-	Control;
+	Position;
 }
