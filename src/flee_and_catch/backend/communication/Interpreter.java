@@ -46,6 +46,7 @@ public class Interpreter {
 	private Client client;
 	private Gson gson;
 	private long initClock;
+	private boolean started;
 	
 	/**
 	 * <h1>Constructor</h1>
@@ -172,7 +173,7 @@ public class Interpreter {
 			case Init:
 				//Initialization of device
 				long time = System.currentTimeMillis() - initClock;
-				if(time <= 500){
+				if(time <= 120){
 					//Set id and update object instances
 					switch (IdentificationType.valueOf(command.getIdentification().getType())) {
 					case App:		
@@ -245,37 +246,39 @@ public class Interpreter {
 			//New update from a robot
 			if(IdentificationType.valueOf(command.getIdentification().getType()) == IdentificationType.Robot){
 				
-				int deviceID = command.getIdentification().getId();
-				Robot robotData = command.getRobots().get(0);
-				ViewController.updateSensorData(deviceID, robotData);
-				
-				//Update the client of the robot
-				client.setDevice(command.getRobots().get(0));
-				
-				//Update the robotController
-				RobotController.update(command.getRobots().get(0));
-				
-				//Update the szenario of the robot
-				Szenario szenario = SzenarioController.getSzenarioOfDevice(command.getIdentification().getId(), IdentificationType.valueOf(command.getIdentification().getType()));
-				if(szenario != null){
-					//Update the szenario
-					for(int i=0;i<szenario.getRobots().size();i++){
-						if(szenario.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId())
-							szenario.getRobots().set(i, command.getRobots().get(0));
-					}
+				if(SzenarioController.getSzenarioOfDevice(command.getRobots().get(0).getIdentification().getId(), IdentificationType.valueOf(command.getRobots().get(0).getIdentification().getType())) != null){
+					int deviceID = command.getIdentification().getId();
+					Robot robotData = command.getRobots().get(0);
+					ViewController.updateSensorData(deviceID, robotData);
 					
-					for(int i=0;i<szenario.getApps().size();i++){
-						//Get the client for the app
-						Client localclient = null;
-						for(int j=0;j<Server.getClients().size();j++){
-							if(szenario.getApps().get(i).getIdentification().getId() == Server.getClients().get(j).getIdentification().getId()){
-								localclient = Server.getClients().get(j);
-								break;
-							}
+					//Update the client of the robot
+					client.setDevice(command.getRobots().get(0));
+					
+					//Update the robotController
+					RobotController.update(command.getRobots().get(0));
+					
+					//Update the szenario of the robot
+					Szenario szenario = SzenarioController.getSzenarioOfDevice(command.getIdentification().getId(), IdentificationType.valueOf(command.getIdentification().getType()));
+					if(szenario != null){
+						//Update the szenario
+						for(int i=0;i<szenario.getRobots().size();i++){
+							if(szenario.getRobots().get(i).getIdentification().getId() == command.getRobots().get(0).getIdentification().getId())
+								szenario.getRobots().set(i, command.getRobots().get(0));
 						}
-						if(localclient != null){
-							SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.CurrentRobot.toString(), client.getIdentification(), new ArrayList<Szenario>(), command.getRobots());
-							Server.sendCmd(localclient, gson.toJson(cmd));
+						
+						for(int i=0;i<szenario.getApps().size();i++){
+							//Get the client for the app
+							Client localclient = null;
+							for(int j=0;j<Server.getClients().size();j++){
+								if(szenario.getApps().get(i).getIdentification().getId() == Server.getClients().get(j).getIdentification().getId()){
+									localclient = Server.getClients().get(j);
+									break;
+								}
+							}
+							if(localclient != null){
+								SynchronizationCommand cmd = new SynchronizationCommand(CommandType.Synchronization.toString(), SynchronizationCommandType.CurrentRobot.toString(), client.getIdentification(), new ArrayList<Szenario>(), command.getRobots());
+								Server.sendCmd(localclient, gson.toJson(cmd));
+							}
 						}
 					}
 				}
@@ -352,6 +355,7 @@ public class Interpreter {
 					
 					SzenarioCommand cmd = new SzenarioCommand(CommandType.Szenario.toString(), SzenarioCommandType.Init.toString(), client.getIdentification(), szenario);
 					Server.sendCmd(client, gson.toJson(cmd));
+					started = true;
 					return;	
 				}
 				//Create of szenario failed
@@ -359,15 +363,19 @@ public class Interpreter {
 				Server.sendCmd(client, gson.toJson(cmd));
 				return;
 			case End:
+				started = false;
 				SzenarioController.close(client, command.getSzenario());
 			case Control:
-				szenarioControl(command);
+				if(started)
+					szenarioControl(command);
 				return;
 			case Synchron:
-				szenarioSynchron(command);
+				if(started)
+					szenarioSynchron(command);
 				return;
 			case Follow:
-				szenarioFollow(command);
+				if(started)
+					szenarioFollow(command);
 				return;
 			default:
 				System.out.println("123 " + "Wrong szenario type of json command");

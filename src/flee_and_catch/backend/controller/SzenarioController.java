@@ -114,8 +114,7 @@ public final class SzenarioController {
 						if(pSzenario.getApps().get(j).getIdentification().getId() == Server.getClients().get(i).getIdentification().getId()){
 							//Send end command to all apps in the szenario
 							Gson gson = new Gson();
-							SzenarioCommand cmd = new SzenarioCommand(CommandType.Szenario.toString(), SzenarioCommandType.End.toString(), pClient.getIdentification(), pSzenario);
-							//SzenarioCommand cmd = new ControlCommand(ControlCommandType.Control.toString(), ControlCommandType.End.toString(), pClient.getIdentification(), pSzenario.getRobots().get(j), new Steering());							
+							SzenarioCommand cmd = new SzenarioCommand(CommandType.Szenario.toString(), SzenarioCommandType.End.toString(), pClient.getIdentification(), pSzenario);					
 							Server.sendCmd(Server.getClients().get(i), gson.toJson(cmd));
 						}
 					}
