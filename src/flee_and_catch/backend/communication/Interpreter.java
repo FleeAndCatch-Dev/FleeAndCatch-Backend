@@ -620,7 +620,7 @@ public class Interpreter {
 				if(follow.getCommand().equals(FollowType.Control.toString()))
 						follow.setCommand(PositionCommandType.Position.toString());
 				//Build command:				
-				PositionCommand command = new PositionCommand(CommandType.Position.toString(), follow.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(i), tempSzenario.getRobots().get(i - 1).getPosition());
+				PositionCommand command = new PositionCommand(CommandType.Position.toString(), follow.getCommand(), client.getIdentification(), pCommand.getSzenario().getRobots().get(i), tempSzenario.getRobots().get(i - 1).getPosition(), tempSzenario.getSteering());
 				
 				Server.sendCmd(clients.get(i), gson.toJson(command));
 			}
