@@ -173,7 +173,7 @@ public class Interpreter {
 			case Init:
 				//Initialization of device
 				long time = System.currentTimeMillis() - initClock;
-				if(time <= 120){
+				if(time <= 300){
 					//Set id and update object instances
 					switch (IdentificationType.valueOf(command.getIdentification().getType())) {
 					case App:		
